@@ -199,6 +199,10 @@ def main() -> None:
 
         command = tool_use.get("tool_input", {}).get("command", "")
 
+        # Check for skip in command string (inline env var: SKIP_DOC_CHECK=1 git merge ...)
+        if re.match(r"^\s*SKIP_DOC_CHECK=1\s+", command):
+            sys.exit(0)
+
         # Check if this is a merge-to-main operation
         if not is_merge_to_main(command):
             sys.exit(0)
