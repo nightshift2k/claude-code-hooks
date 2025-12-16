@@ -67,7 +67,10 @@ def check_git_command(command: str) -> None:
             sys.exit(2)
 
         # Check for local branch deletion: git branch -d/-D branch
-        if re.search(rf"git\s+branch\s+-[dD].*{branch}", command):
+        # Use \s+ (not .*) after flag to prevent false positives in chained commands
+        # like "git branch -d feature && git push origin main"
+        # Word boundary ensures exact branch match at command/separator boundaries
+        if re.search(rf"git\s+branch\s+-[dD]\s+{re.escape(branch)}(\s|$|&&|;|\|)", command):
             error_msg = Colors.red(f"❌ Blocked: Cannot delete protected branch '{branch}'")
             print(error_msg, file=sys.stderr)
             sys.exit(2)
