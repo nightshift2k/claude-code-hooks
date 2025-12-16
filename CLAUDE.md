@@ -8,6 +8,7 @@ Protect your codebase and enhance Claude Code with safety guardrails, standard e
 - `git-branch-protection` - Blocks file edits on protected branches (main, master, production, prod)
 - `git-safety-check` - Blocks --no-verify flag and protected branch deletion
 - `git-commit-message-filter` - Blocks commits containing Claude auto-generated attribution
+- `doc-update-check` - Blocks merge-to-main without documentation updates
 - `python-uv-enforcer` - Blocks direct pip/python usage, enforces uv
 - `rules-reminder` - Reminds Claude about CLAUDE.md and .claude/rules/* on session start and implementation prompts
 - `prompt-flag-appender` - Injects markdown fragments via +triggers (+ultrathink, +absolute)

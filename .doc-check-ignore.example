@@ -1,0 +1,22 @@
+# Documentation Check Ignore Patterns
+#
+# Files matching these patterns will be excluded from the documentation
+# update check when merging to main.
+#
+# Use glob-style patterns:
+#   - * matches files in current directory
+#   - ** matches across directories
+#   - Lines starting with # are comments
+
+# Exclude planning and brainstorming directories
+docs/plans/**
+docs/brainstorms/**
+
+# Exclude temporary and scratch documentation
+*-todo.md
+*-scratch.md
+*-draft.md
+
+# Exclude internal notes
+*-notes.md
+NOTES.md

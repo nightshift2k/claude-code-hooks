@@ -24,6 +24,7 @@ chmod +x ~/.claude/hooks/*.py
 | `git-branch-protection.py` | PreToolUse (Edit/Write) | Blocks file edits on protected branches (main, master, production, prod) |
 | `git-safety-check.py` | PreToolUse (Bash) | Blocks `--no-verify`, protected branch deletion |
 | `git-commit-message-filter.py` | PreToolUse (Bash) | Blocks Claude auto-generated attribution in commits |
+| `doc-update-check.py` | PreToolUse (Bash) | Blocks merge-to-main without documentation updates |
 | `python-uv-enforcer.py` | PreToolUse (Bash) | Enforces `uv` over direct pip/python usage |
 
 ### Context & Prompts
@@ -50,6 +51,9 @@ python-uv-enforcer
 
 # Allow edits on main for initial setup
 git-branch-protection
+
+# Skip doc check during rapid prototyping
+doc-update-check
 ```
 
 Lines starting with `#` are comments.
@@ -90,6 +94,46 @@ Blocks commits with Claude auto-generated markers.
 ```
 $ git commit -m "Fix bug\n\n🤖 Generated with Claude Code..."
 ❌ Commit message contains auto-generated Claude markers. Please use a custom commit message.
+```
+
+### doc-update-check.py
+
+Ensures documentation is updated when merging to main.
+
+```
+$ git merge feature-branch  # on main branch
+❌ No documentation updates detected in this branch.
+
+📝 Files checked: CHANGELOG.md, README.md, *.md (excluding .doc-check-ignore patterns)
+
+💡 Options:
+   1. Update relevant documentation, then retry merge
+   2. If no docs needed, ask user to confirm, then run:
+      SKIP_DOC_CHECK=1 git merge <branch>
+
+🔍 Branch diff: git diff main...HEAD --name-only
+```
+
+**Detects merge-to-main via:**
+- `git merge` while on main branch
+- `git checkout main && git merge` command chains
+- `gh pr merge` operations
+
+**Skip conditions:**
+- `SKIP_DOC_CHECK=1` environment variable
+- Hook disabled via `.claude/disabled-hooks`
+- `.doc-check-ignore` patterns (optional)
+
+**Example `.doc-check-ignore`:**
+```
+# Exclude planning and brainstorming
+docs/plans/**
+docs/brainstorms/**
+
+# Exclude temporary files
+*-todo.md
+*-scratch.md
+*-draft.md
 ```
 
 ### python-uv-enforcer.py
@@ -192,7 +236,8 @@ TRIGGER_FILE_MAP = {
         "hooks": [
           {"type": "command", "command": "~/.claude/hooks/git-commit-message-filter.py"},
           {"type": "command", "command": "~/.claude/hooks/python-uv-enforcer.py"},
-          {"type": "command", "command": "~/.claude/hooks/git-safety-check.py"}
+          {"type": "command", "command": "~/.claude/hooks/git-safety-check.py"},
+          {"type": "command", "command": "~/.claude/hooks/doc-update-check.py"}
         ]
       },
       {
@@ -226,6 +271,7 @@ TRIGGER_FILE_MAP = {
 |----------|-------------|
 | `CLAUDE_PROJECT_DIR` | Project root directory |
 | `CLAUDE_CODE_REMOTE` | "true" if web, empty if CLI |
+| `SKIP_DOC_CHECK` | "1" to bypass doc-update-check hook |
 
 ## Development
 
@@ -274,6 +320,9 @@ echo '{"hook_event_name": "UserPromptSubmit", "prompt": "implement feature"}' | 
 
 # Test SessionStart hook
 echo '{"hook_event_name": "SessionStart"}' | python3 rules-reminder.py
+
+# Test doc-update-check hook
+echo '{"tool_name": "Bash", "tool_input": {"command": "git merge feature"}}' | python3 doc-update-check.py
 ```
 
 ## License

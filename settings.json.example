@@ -44,6 +44,10 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/git-safety-check.py"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/doc-update-check.py"
           }
         ]
       },
