@@ -5,11 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.1] - 2025-12-20
 
 ### Added
 
 - **doc-update-check.py** - Blocks merge-to-main operations without documentation updates, ensuring code changes are accompanied by documentation updates (*.md files). Supports `.doc-check-ignore` patterns for excluding planning/temporary docs, and `SKIP_DOC_CHECK=1` environment variable for bypass.
+
+- **prompt-flag-appender.py** - Added approval mode feature with two usage patterns:
+  - Per-prompt trigger: `+approval` appends approval mode fragment to single prompt
+  - Session mode: `touch ~/.claude/hook-approval-mode-on` enables approval mode for entire session
+  - Supports extensible session-based modes via `hook-*-mode-on` flag file pattern
 
 ### Fixed
 

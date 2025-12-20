@@ -6,14 +6,26 @@ This hook processes Claude Code prompts to detect trailing triggers (e.g., "+ult
 and replaces them with the contents of corresponding markdown files. This allows
 users to quickly inject common prompt modifications using trigger words.
 
+Additionally, this hook supports session-based modes via flag files in ~/.claude/.
+Files matching the pattern "hook-*-mode-on" will automatically inject their
+corresponding markdown fragments for the entire session.
+
 Usage:
     Include mapped triggers at the end of the prompt (e.g., "+ultrathink +absolute").
     Triggers are stripped from the prompt and replaced by the contents of the mapped
     markdown files if they exist in the prompt-fragments/ directory.
 
+    For session-based modes, create flag files in ~/.claude/:
+        touch ~/.claude/hook-approval-mode-on  # Enables approval mode for entire session
+        rm ~/.claude/hook-approval-mode-on     # Disables approval mode
+
 Example:
     User prompt: "Refactor this code +ultrathink"
     Result: "Refactor this code\n\n[ultrathink.md contents]"
+
+    Session mode: ~/.claude/hook-approval-mode-on exists
+    User prompt: "Refactor this code"
+    Result: "Refactor this code\n\n[approval.md contents]"
 """
 
 from pathlib import Path
@@ -30,7 +42,41 @@ TRIGGER_PREFIX = "+"
 TRIGGER_FILE_MAP: Dict[str, str] = {
     "+ultrathink": "ultrathink.md",
     "+absolute": "absolute.md",
+    "+approval": "approval.md",
 }
+
+
+def get_active_mode_fragments() -> List[str]:
+    """
+    Scan ~/.claude/ for hook-*-mode-on files and load corresponding fragments.
+
+    This function enables session-based modes by detecting flag files in the
+    ~/.claude/ directory. Flag files follow the pattern "hook-<mode>-mode-on",
+    and the corresponding markdown fragment is loaded from prompt-fragments/<mode>.md.
+
+    Returns:
+        List of markdown fragment contents for active modes. Empty list if no
+        active modes or if ~/.claude/ doesn't exist.
+
+    Example:
+        Flag file: ~/.claude/hook-approval-mode-on
+        Loads: prompt-fragments/approval.md
+    """
+    claude_dir = Path.home() / ".claude"
+    fragments_dir = Path(__file__).resolve().parent / "prompt-fragments"
+    fragments: List[str] = []
+
+    if not claude_dir.is_dir():
+        return fragments
+
+    for flag_file in claude_dir.glob("hook-*-mode-on"):
+        # Extract mode name: hook-approval-mode-on → approval
+        mode_name = flag_file.name[5:-8]  # strip "hook-" and "-mode-on"
+        fragment_path = fragments_dir / f"{mode_name}.md"
+        if fragment_path.is_file():
+            fragments.append(fragment_path.read_text(encoding="utf-8"))
+
+    return fragments
 
 
 def split_prompt_and_triggers(prompt: str) -> Tuple[str, List[str]]:
@@ -169,9 +215,18 @@ def main() -> None:
         if not isinstance(prompt, str):
             raise ValueError("prompt must be a string")
 
+        # Get mode-based fragments (from flag files in ~/.claude/)
+        mode_fragments = get_active_mode_fragments()
+
+        # Get trigger-based fragments (from prompt triggers)
         base_prompt, triggers = split_prompt_and_triggers(prompt)
-        fragments = load_fragments(triggers)
-        result = build_prompt(base_prompt, fragments)
+        trigger_fragments = load_fragments(triggers)
+
+        # Combine: mode fragments first, then trigger fragments
+        all_fragments = mode_fragments + trigger_fragments
+
+        # Build final prompt
+        result = build_prompt(base_prompt, all_fragments)
         print(result)
     except json.JSONDecodeError as e:
         print(f"prompt_flag_appender error: Invalid JSON input - {e}", file=sys.stderr)

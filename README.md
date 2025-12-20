@@ -33,7 +33,7 @@ chmod +x ~/.claude/hooks/*.py
 |------|-------|-------------|
 | `environment-awareness.py` | SessionStart | Injects date, time, timezone, OS, and working directory |
 | `rules-reminder.py` | SessionStart, UserPromptSubmit | Reminds Claude about CLAUDE.md and .claude/rules/* |
-| `prompt-flag-appender.py` | UserPromptSubmit | Injects markdown via `+ultrathink`, `+absolute` triggers |
+| `prompt-flag-appender.py` | UserPromptSubmit | Injects markdown via `+ultrathink`, `+absolute`, `+approval` triggers |
 
 ### Shared Utilities
 
@@ -179,21 +179,51 @@ Review and follow all project rules strictly before making changes.
 
 ### prompt-flag-appender.py
 
-Appends markdown fragments based on trigger words.
+Appends markdown fragments based on trigger words or session modes.
+
+#### Per-Prompt Triggers
 
 | Trigger | File | Effect |
 |---------|------|--------|
 | `+ultrathink` | ultrathink.md | Deep analysis mode |
 | `+absolute` | absolute.md | Direct, no-filler responses |
+| `+approval` | approval.md | Human-in-the-loop mode (propose, don't execute) |
 
 **Usage:**
 ```
 refactor this code +ultrathink
 help me understand this +absolute
+implement feature +approval
 complex task +ultrathink +absolute
 ```
 
-**Adding custom triggers:**
+#### Session-Based Modes
+
+Enable modes for the entire session via flag files in `~/.claude/`:
+
+```bash
+# Enable approval mode for entire session
+touch ~/.claude/hook-approval-mode-on
+
+# Now every prompt includes approval mode fragment
+# No need to add +approval to each prompt
+
+# Disable approval mode
+rm ~/.claude/hook-approval-mode-on
+```
+
+**Mode precedence:** Session modes are injected first, then per-prompt triggers are appended.
+
+**Example:**
+```bash
+# Enable approval mode for session
+touch ~/.claude/hook-approval-mode-on
+
+# This prompt gets both approval mode (from flag file) and ultrathink (from trigger)
+"refactor this code +ultrathink"
+```
+
+#### Adding Custom Triggers
 
 1. Create markdown file in `~/.claude/hooks/prompt-fragments/`
 2. Add mapping to `TRIGGER_FILE_MAP` in `prompt-flag-appender.py`:
@@ -202,8 +232,31 @@ complex task +ultrathink +absolute
 TRIGGER_FILE_MAP = {
     "+ultrathink": "ultrathink.md",
     "+absolute": "absolute.md",
+    "+approval": "approval.md",
     "+concise": "concise.md",  # your custom trigger
 }
+```
+
+#### Adding Custom Session Modes
+
+1. Create markdown file in `~/.claude/hooks/prompt-fragments/<mode>.md`
+2. Add trigger mapping to `TRIGGER_FILE_MAP` (optional, if you want both trigger and mode support)
+3. Create flag file: `touch ~/.claude/hook-<mode>-mode-on`
+
+**Example: Adding "verbose" mode**
+```bash
+# 1. Create fragment
+cat > ~/.claude/hooks/prompt-fragments/verbose.md << 'EOF'
+---
+## Verbose Mode
+Provide detailed explanations with step-by-step reasoning.
+---
+EOF
+
+# 2. (Optional) Add to TRIGGER_FILE_MAP for +verbose trigger support
+
+# 3. Enable as session mode
+touch ~/.claude/hook-verbose-mode-on
 ```
 
 ## Configuration
@@ -323,6 +376,14 @@ echo '{"hook_event_name": "SessionStart"}' | python3 rules-reminder.py
 
 # Test doc-update-check hook
 echo '{"tool_name": "Bash", "tool_input": {"command": "git merge feature"}}' | python3 doc-update-check.py
+
+# Test prompt-flag-appender with triggers
+echo '{"hook_event_name": "UserPromptSubmit", "prompt": "fix this +ultrathink +approval"}' | python3 prompt-flag-appender.py
+
+# Test prompt-flag-appender with session mode
+touch ~/.claude/hook-approval-mode-on
+echo '{"hook_event_name": "UserPromptSubmit", "prompt": "fix this"}' | python3 prompt-flag-appender.py
+rm ~/.claude/hook-approval-mode-on
 ```
 
 ## License
