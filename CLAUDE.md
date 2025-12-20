@@ -26,3 +26,29 @@ Protect your codebase and enhance Claude Code with safety guardrails, standard e
 - Silent failure: `except Exception: sys.exit(0)`
 - Exit 0 = success, Exit 2 = block action
 - Type hints required
+
+## Git Conventions
+**Commits**: `type(scope): description` (imperative, <50 chars, lowercase, no period)
+
+| Type | Usage | Type | Usage |
+|------|-------|------|-------|
+| `feat` | New feature | `fix` | Bug fix |
+| `refactor` | Code restructure | `docs` | Documentation |
+| `test` | Tests | `chore` | Build/deps |
+
+**Branches**: `feature/*`, `fix/*`, `refactor/*`, `docs/*` - never commit directly to main
+
+## Security
+- Never log/print stdin data (may contain secrets)
+- Validate JSON input, fail silently on malformed data
+- No network calls - offline operation only
+- No file writes outside explicit hook purpose
+
+## Code Quality
+- Format with `ruff format` before commit
+- Lint with `ruff check`
+- All functions require docstrings
+
+## Compatibility
+- Python 3.8+ stdlib only (no external dependencies)
+- Cross-platform: macOS, Linux, Windows (Git Bash)
