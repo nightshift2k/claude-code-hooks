@@ -1,23 +1,62 @@
+<div align="center">
+
 # Claude Code Hooks
 
-Protect your codebase and enhance Claude Code with safety guardrails, standard enforcement, and context injection.
+**Protect your codebase and enhance Claude Code with safety guardrails, standard enforcement, and context injection.**
 
-## Installation
+[![License](https://img.shields.io/github/license/nightshift2k/claude-code-hooks)](https://github.com/nightshift2k/claude-code-hooks/blob/main/LICENSE)
+[![Python](https://img.shields.io/badge/python-3.8+-blue)](https://www.python.org/)
+[![Release](https://img.shields.io/github/v/release/nightshift2k/claude-code-hooks)](https://github.com/nightshift2k/claude-code-hooks/releases)
+[![Stars](https://img.shields.io/github/stars/nightshift2k/claude-code-hooks)](https://github.com/nightshift2k/claude-code-hooks/stargazers)
+[![Issues](https://img.shields.io/github/issues/nightshift2k/claude-code-hooks)](https://github.com/nightshift2k/claude-code-hooks/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/nightshift2k/claude-code-hooks)](https://github.com/nightshift2k/claude-code-hooks/commits)
 
-1. Copy the `hooks/` directory to `~/.claude/hooks/`
-2. Merge `settings.json.example` into `~/.claude/settings.json`
+[![Lint](https://github.com/nightshift2k/claude-code-hooks/actions/workflows/lint.yml/badge.svg)](https://github.com/nightshift2k/claude-code-hooks/actions/workflows/lint.yml)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](https://github.com/nightshift2k/claude-code-hooks/pulls)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow)](https://conventionalcommits.org)
+[![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000)](https://github.com/astral-sh/ruff)
+
+</div>
+
+---
+
+## How It Works
+
+```mermaid
+graph LR
+    A[👤 User Action] --> B{🎣 Hook Event}
+    B --> C[📜 Hook Script]
+    C -->|Exit 0| D[✅ Allow]
+    C -->|Exit 2| E[🚫 Block]
+    D --> F[🤖 Claude Executes]
+    E --> G[⚠️ User Notified]
+```
+
+---
+
+## Quick Start
+
+### 1. Copy Hooks
 
 ```bash
-# Copy hooks
 cp -r hooks/* ~/.claude/hooks/
+```
 
-# Make executable
+### 2. Make Executable
+
+```bash
 chmod +x ~/.claude/hooks/*.py
 ```
 
-## Available Hooks
+### 3. Merge Settings
 
-### Safety & Guardrails
+Merge the hook configurations from `settings.json.example` into your `~/.claude/settings.json` file.
+
+---
+
+## Features
+
+### 🛡️ Safety & Guardrails
 
 | Hook | Event | Description |
 |------|-------|-------------|
@@ -27,7 +66,7 @@ chmod +x ~/.claude/hooks/*.py
 | `doc-update-check.py` | PreToolUse (Bash) | Blocks merge-to-main without documentation updates |
 | `python-uv-enforcer.py` | PreToolUse (Bash) | Enforces `uv` over direct pip/python usage |
 
-### Context & Prompts
+### 📝 Context & Prompts
 
 | Hook | Event | Description |
 |------|-------|-------------|
@@ -35,11 +74,37 @@ chmod +x ~/.claude/hooks/*.py
 | `rules-reminder.py` | SessionStart, UserPromptSubmit | Reminds Claude about CLAUDE.md and .claude/rules/* |
 | `prompt-flag-appender.py` | UserPromptSubmit | Injects markdown via `+ultrathink`, `+absolute`, `+approval` triggers |
 
-### Shared Utilities
+### 🔧 Shared Utilities
 
 | File | Description |
 |------|-------------|
 | `hook_utils.py` | Shared utilities: `exit_if_disabled()`, `Colors` class |
+
+---
+
+## Hook Event Architecture
+
+```mermaid
+graph TB
+    subgraph "Hook Events"
+        SS[SessionStart]
+        UPS[UserPromptSubmit]
+        PTU[PreToolUse]
+    end
+    subgraph "Hooks"
+        SS --> ENV[environment-awareness]
+        SS --> RULES1[rules-reminder]
+        UPS --> PFA[prompt-flag-appender]
+        UPS --> RULES2[rules-reminder]
+        PTU --> GSC[git-safety-check]
+        PTU --> GBP[git-branch-protection]
+        PTU --> DUC[doc-update-check]
+        PTU --> PUE[python-uv-enforcer]
+        PTU --> GCM[git-commit-message-filter]
+    end
+```
+
+---
 
 ## Disabling Hooks Per-Project
 
@@ -58,7 +123,12 @@ doc-update-check
 
 Lines starting with `#` are comments.
 
-## Hook Details
+---
+
+## Hook Documentation
+
+<details>
+<summary><b>git-branch-protection.py</b></summary>
 
 ### git-branch-protection.py
 
@@ -75,6 +145,11 @@ $ edit file on main branch
 
 **Protected branches:** main, master, production, prod
 
+</details>
+
+<details>
+<summary><b>git-safety-check.py</b></summary>
+
 ### git-safety-check.py
 
 Blocks dangerous git operations.
@@ -87,6 +162,11 @@ $ git branch -D main
 ❌ Blocked: Cannot delete protected branch 'main'
 ```
 
+</details>
+
+<details>
+<summary><b>git-commit-message-filter.py</b></summary>
+
 ### git-commit-message-filter.py
 
 Blocks commits with Claude auto-generated markers.
@@ -95,6 +175,11 @@ Blocks commits with Claude auto-generated markers.
 $ git commit -m "Fix bug\n\n🤖 Generated with Claude Code..."
 ❌ Commit message contains auto-generated Claude markers. Please use a custom commit message.
 ```
+
+</details>
+
+<details>
+<summary><b>doc-update-check.py</b></summary>
 
 ### doc-update-check.py
 
@@ -136,6 +221,11 @@ docs/brainstorms/**
 *-draft.md
 ```
 
+</details>
+
+<details>
+<summary><b>python-uv-enforcer.py</b></summary>
+
 ### python-uv-enforcer.py
 
 Enforces modern Python tooling.
@@ -149,6 +239,11 @@ $ pip install requests
 💡 Learn more: https://github.com/astral-sh/uv
 ```
 
+</details>
+
+<details>
+<summary><b>environment-awareness.py</b></summary>
+
 ### environment-awareness.py
 
 Injects system environment context at session start and resume.
@@ -160,6 +255,11 @@ Injects system environment context at session start and resume.
 - OS: macOS 15.1
 - Directory: ~/code/my-project
 ```
+
+</details>
+
+<details>
+<summary><b>rules-reminder.py</b></summary>
 
 ### rules-reminder.py
 
@@ -176,6 +276,11 @@ This project may have rules defined in:
 
 Review and follow all project rules strictly before making changes.
 ```
+
+</details>
+
+<details>
+<summary><b>prompt-flag-appender.py</b></summary>
 
 ### prompt-flag-appender.py
 
@@ -259,7 +364,14 @@ EOF
 touch .claude/hook-verbose-mode-on
 ```
 
+</details>
+
+---
+
 ## Configuration
+
+<details>
+<summary><b>settings.json Structure</b></summary>
 
 ### settings.json Structure
 
@@ -326,7 +438,14 @@ touch .claude/hook-verbose-mode-on
 | `CLAUDE_CODE_REMOTE` | "true" if web, empty if CLI |
 | `SKIP_DOC_CHECK` | "1" to bypass doc-update-check hook |
 
+</details>
+
+---
+
 ## Development
+
+<details>
+<summary><b>Adding a New Hook</b></summary>
 
 ### Adding a New Hook
 
@@ -362,6 +481,11 @@ if __name__ == "__main__":
 3. Add to `settings.json.example`
 4. Test: `echo '{"tool_name": "Bash", "tool_input": {"command": "test"}}' | python3 your-hook.py`
 
+</details>
+
+<details>
+<summary><b>Testing Hooks</b></summary>
+
 ### Testing Hooks
 
 ```bash
@@ -386,6 +510,22 @@ CLAUDE_PROJECT_DIR="$PWD" echo '{"hook_event_name": "UserPromptSubmit", "prompt"
 rm .claude/hook-approval-mode-on
 ```
 
+</details>
+
+---
+
+<div align="center">
+
+## Project Activity
+
+[![Star History Chart](https://api.star-history.com/svg?repos=nightshift2k/claude-code-hooks&type=Date)](https://star-history.com/#nightshift2k/claude-code-hooks&Date)
+
+## Contributors
+
+[![Contributors](https://contrib.rocks/image?repo=nightshift2k/claude-code-hooks)](https://github.com/nightshift2k/claude-code-hooks/graphs/contributors)
+
 ## License
 
-MIT
+[MIT License](https://github.com/nightshift2k/claude-code-hooks/blob/main/LICENSE)
+
+</div>
