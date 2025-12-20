@@ -199,17 +199,17 @@ complex task +ultrathink +absolute
 
 #### Session-Based Modes
 
-Enable modes for the entire session via flag files in `~/.claude/`:
+Enable modes for the entire session via flag files in the project's `.claude/` directory:
 
 ```bash
-# Enable approval mode for entire session
-touch ~/.claude/hook-approval-mode-on
+# Enable approval mode for entire session (in project root)
+touch .claude/hook-approval-mode-on
 
 # Now every prompt includes approval mode fragment
 # No need to add +approval to each prompt
 
 # Disable approval mode
-rm ~/.claude/hook-approval-mode-on
+rm .claude/hook-approval-mode-on
 ```
 
 **Mode precedence:** Session modes are injected first, then per-prompt triggers are appended.
@@ -217,7 +217,7 @@ rm ~/.claude/hook-approval-mode-on
 **Example:**
 ```bash
 # Enable approval mode for session
-touch ~/.claude/hook-approval-mode-on
+touch .claude/hook-approval-mode-on
 
 # This prompt gets both approval mode (from flag file) and ultrathink (from trigger)
 "refactor this code +ultrathink"
@@ -241,7 +241,7 @@ TRIGGER_FILE_MAP = {
 
 1. Create markdown file in `~/.claude/hooks/prompt-fragments/<mode>.md`
 2. Add trigger mapping to `TRIGGER_FILE_MAP` (optional, if you want both trigger and mode support)
-3. Create flag file: `touch ~/.claude/hook-<mode>-mode-on`
+3. Create flag file in project: `touch .claude/hook-<mode>-mode-on`
 
 **Example: Adding "verbose" mode**
 ```bash
@@ -255,8 +255,8 @@ EOF
 
 # 2. (Optional) Add to TRIGGER_FILE_MAP for +verbose trigger support
 
-# 3. Enable as session mode
-touch ~/.claude/hook-verbose-mode-on
+# 3. Enable as session mode (in project root)
+touch .claude/hook-verbose-mode-on
 ```
 
 ## Configuration
@@ -381,9 +381,9 @@ echo '{"tool_name": "Bash", "tool_input": {"command": "git merge feature"}}' | p
 echo '{"hook_event_name": "UserPromptSubmit", "prompt": "fix this +ultrathink +approval"}' | python3 prompt-flag-appender.py
 
 # Test prompt-flag-appender with session mode
-touch ~/.claude/hook-approval-mode-on
-echo '{"hook_event_name": "UserPromptSubmit", "prompt": "fix this"}' | python3 prompt-flag-appender.py
-rm ~/.claude/hook-approval-mode-on
+mkdir -p .claude && touch .claude/hook-approval-mode-on
+CLAUDE_PROJECT_DIR="$PWD" echo '{"hook_event_name": "UserPromptSubmit", "prompt": "fix this"}' | python3 prompt-flag-appender.py
+rm .claude/hook-approval-mode-on
 ```
 
 ## License

@@ -6,30 +6,31 @@ This hook processes Claude Code prompts to detect trailing triggers (e.g., "+ult
 and replaces them with the contents of corresponding markdown files. This allows
 users to quickly inject common prompt modifications using trigger words.
 
-Additionally, this hook supports session-based modes via flag files in ~/.claude/.
-Files matching the pattern "hook-*-mode-on" will automatically inject their
-corresponding markdown fragments for the entire session.
+Additionally, this hook supports session-based modes via flag files in the project's
+.claude/ directory. Files matching the pattern "hook-*-mode-on" will automatically
+inject their corresponding markdown fragments for the entire session.
 
 Usage:
     Include mapped triggers at the end of the prompt (e.g., "+ultrathink +absolute").
     Triggers are stripped from the prompt and replaced by the contents of the mapped
     markdown files if they exist in the prompt-fragments/ directory.
 
-    For session-based modes, create flag files in ~/.claude/:
-        touch ~/.claude/hook-approval-mode-on  # Enables approval mode for entire session
-        rm ~/.claude/hook-approval-mode-on     # Disables approval mode
+    For session-based modes, create flag files in your project's .claude/ directory:
+        touch .claude/hook-approval-mode-on  # Enables approval mode for project
+        rm .claude/hook-approval-mode-on     # Disables approval mode
 
 Example:
     User prompt: "Refactor this code +ultrathink"
     Result: "Refactor this code\n\n[ultrathink.md contents]"
 
-    Session mode: ~/.claude/hook-approval-mode-on exists
+    Session mode: $CLAUDE_PROJECT_DIR/.claude/hook-approval-mode-on exists
     User prompt: "Refactor this code"
     Result: "Refactor this code\n\n[approval.md contents]"
 """
 
 from pathlib import Path
 import json
+import os
 import sys
 from typing import Dict, List, Tuple, Any
 
@@ -48,21 +49,25 @@ TRIGGER_FILE_MAP: Dict[str, str] = {
 
 def get_active_mode_fragments() -> List[str]:
     """
-    Scan ~/.claude/ for hook-*-mode-on files and load corresponding fragments.
+    Scan project's .claude/ for hook-*-mode-on files and load corresponding fragments.
 
     This function enables session-based modes by detecting flag files in the
-    ~/.claude/ directory. Flag files follow the pattern "hook-<mode>-mode-on",
+    project's .claude/ directory. Flag files follow the pattern "hook-<mode>-mode-on",
     and the corresponding markdown fragment is loaded from prompt-fragments/<mode>.md.
 
     Returns:
         List of markdown fragment contents for active modes. Empty list if no
-        active modes or if ~/.claude/ doesn't exist.
+        active modes, CLAUDE_PROJECT_DIR is not set, or .claude/ doesn't exist.
 
     Example:
-        Flag file: ~/.claude/hook-approval-mode-on
+        Flag file: $CLAUDE_PROJECT_DIR/.claude/hook-approval-mode-on
         Loads: prompt-fragments/approval.md
     """
-    claude_dir = Path.home() / ".claude"
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    if not project_dir:
+        return []
+
+    claude_dir = Path(project_dir) / ".claude"
     fragments_dir = Path(__file__).resolve().parent / "prompt-fragments"
     fragments: List[str] = []
 

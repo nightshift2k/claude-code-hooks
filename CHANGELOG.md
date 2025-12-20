@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2025-12-20
+
+### Fixed
+
+- **prompt-flag-appender.py** - Session-based mode flag files are now correctly evaluated per-project (`$CLAUDE_PROJECT_DIR/.claude/hook-*-mode-on`) instead of globally (`~/.claude/`). This allows different projects to have different active modes.
+
 ## [0.1.1] - 2025-12-20
 
 ### Added
@@ -13,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **prompt-flag-appender.py** - Added approval mode feature with two usage patterns:
   - Per-prompt trigger: `+approval` appends approval mode fragment to single prompt
-  - Session mode: `touch ~/.claude/hook-approval-mode-on` enables approval mode for entire session
+  - Session mode: `touch .claude/hook-approval-mode-on` enables approval mode for project
   - Supports extensible session-based modes via `hook-*-mode-on` flag file pattern
 
 ### Fixed
