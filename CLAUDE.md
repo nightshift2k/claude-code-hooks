@@ -46,7 +46,7 @@ Protect your codebase and enhance Claude Code with safety guardrails, standard e
 
 ## Code Quality
 - Format with `ruff format` before commit
-- Lint with `ruff check`
+- Lint with `ruff check` before push
 - All functions require docstrings
 
 ## Compatibility
