@@ -74,7 +74,7 @@ def main() -> None:
                     error_msg += f"\n   uv run {command}"
 
                 error_msg += (
-                    f"\n{Colors.blue("💡 Learn more:")} https://github.com/astral-sh/uv"
+                    f"\n{Colors.blue('💡 Learn more:')} https://github.com/astral-sh/uv"
                 )
 
                 print(error_msg, file=sys.stderr)

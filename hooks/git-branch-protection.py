@@ -13,7 +13,7 @@ This hook assumes it's only called for edit-related tools.
 import json
 import subprocess
 import sys
-from typing import Dict, Any, List, Optional
+from typing import List, Optional
 
 from hook_utils import exit_if_disabled, Colors
 

@@ -13,7 +13,7 @@ This hook prevents dangerous Git operations including:
 import json
 import re
 import sys
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from hook_utils import exit_if_disabled, Colors
 
@@ -35,9 +35,9 @@ def check_git_command(command: str) -> None:
     """
     # Check if --no-verify is used to skip hooks - block immediately
     # Only detect --no-verify as a command argument, not within quotes or heredocs
-    if re.search(r'(^|\s)--no-verify(\s|$)', command):
+    if re.search(r"(^|\s)--no-verify(\s|$)", command):
         # Further validation: ensure it's not inside quotes or heredocs
-        verify_pos = command.find('--no-verify')
+        verify_pos = command.find("--no-verify")
         safe_in_content = False
 
         # Check if --no-verify is inside -m "..." message (re.DOTALL for multiline)
@@ -51,7 +51,9 @@ def check_git_command(command: str) -> None:
             safe_in_content = True
 
         if not safe_in_content:
-            error_msg = Colors.red("❌ Using --no-verify to skip Git hooks is prohibited!")
+            error_msg = Colors.red(
+                "❌ Using --no-verify to skip Git hooks is prohibited!"
+            )
             print(error_msg, file=sys.stderr)
             sys.exit(2)
 
@@ -62,7 +64,9 @@ def check_git_command(command: str) -> None:
     for branch in protected_branches:
         # Check for remote branch deletion: git push origin :branch
         if f"git push origin :{branch}" in command:
-            error_msg = Colors.red(f"❌ Blocked: Cannot delete protected branch '{branch}'")
+            error_msg = Colors.red(
+                f"❌ Blocked: Cannot delete protected branch '{branch}'"
+            )
             print(error_msg, file=sys.stderr)
             sys.exit(2)
 
@@ -70,18 +74,17 @@ def check_git_command(command: str) -> None:
         # Use \s+ (not .*) after flag to prevent false positives in chained commands
         # like "git branch -d feature && git push origin main"
         # Word boundary ensures exact branch match at command/separator boundaries
-        if re.search(rf"git\s+branch\s+-[dD]\s+{re.escape(branch)}(\s|$|&&|;|\|)", command):
-            error_msg = Colors.red(f"❌ Blocked: Cannot delete protected branch '{branch}'")
+        if re.search(
+            rf"git\s+branch\s+-[dD]\s+{re.escape(branch)}(\s|$|&&|;|\|)", command
+        ):
+            error_msg = Colors.red(
+                f"❌ Blocked: Cannot delete protected branch '{branch}'"
+            )
             print(error_msg, file=sys.stderr)
             sys.exit(2)
 
     # Dangerous operation patterns (logged only, not blocked)
     # These are informational warnings for the user
-    dangerous_patterns = [
-        (r"git\s+push\s+.*\s+--force", "Force push may overwrite remote history. Please confirm."),
-        (r"git\s+reset\s+--hard", "Hard reset will lose uncommitted changes. Please confirm."),
-        (r"git\s+clean\s+-[fd]", "Clean operation will delete untracked files. Please confirm."),
-    ]
 
     # Note: Dangerous patterns are currently logged only (not implemented as blocking)
     # Future enhancement could add interactive confirmation

@@ -120,7 +120,6 @@ def is_ignored(file_path: str, patterns: List[str]) -> bool:
     Returns:
         True if file matches any ignore pattern, False otherwise.
     """
-    from pathlib import Path
 
     for pattern in patterns:
         # Convert glob pattern to regex
@@ -162,17 +161,11 @@ def get_modified_docs() -> List[str]:
 
         # Filter to .md files (case insensitive)
         all_files = result.stdout.strip().split("\n")
-        md_files = [
-            f for f in all_files
-            if f.lower().endswith(".md")
-        ]
+        md_files = [f for f in all_files if f.lower().endswith(".md")]
 
         # Apply ignore patterns
         ignore_patterns = load_doc_check_ignore_patterns()
-        filtered_files = [
-            f for f in md_files
-            if not is_ignored(f, ignore_patterns)
-        ]
+        filtered_files = [f for f in md_files if not is_ignored(f, ignore_patterns)]
 
         return filtered_files
 

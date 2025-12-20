@@ -46,7 +46,7 @@ def get_environment_context() -> str:
     project_dir = os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd())
     home = str(Path.home())
     if project_dir.startswith(home):
-        project_dir = "~" + project_dir[len(home):]
+        project_dir = "~" + project_dir[len(home) :]
 
     return f"""## Environment
 - Date: {date_str}
