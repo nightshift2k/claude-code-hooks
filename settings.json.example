@@ -75,6 +75,18 @@
             "command": "~/.claude/hooks/git-branch-protection.py"
           }
         ]
+      },
+      {
+        "matcher": "^(Read)$",
+        "hooks": [
+          {
+            "type": "command",
+            // large-file-guard: Blocks full reads of large files
+            // Config: LARGE_FILE_THRESHOLD env var or ~/.claude/hook-large-file-guard-config (default: 500 lines)
+            // Bypass: ALLOW_LARGE_READ=1 env var
+            "command": "~/.claude/hooks/large-file-guard.py"
+          }
+        ]
       }
     ]
   }

@@ -12,6 +12,7 @@ Safety guardrails, standard enforcement, and context injection for Claude Code.
 - `python-uv-enforcer` - Blocks pip/python, enforces uv
 - `rules-reminder` - Reminds Claude about CLAUDE.md and .claude/rules/* at session start and implementation
 - `prompt-flag-appender` - Injects markdown fragments via +triggers (+ultrathink, +absolute)
+- `large-file-guard` - Blocks Read for large files (>500 lines), suggests Serena/Grep alternatives
 
 ## Structure
 - `hooks/*.py` - Hook scripts (stdlib only, Python 3.8+)

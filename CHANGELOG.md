@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2025-12-21
+
+### Added
+
+- **large-file-guard.py** - New PreToolUse hook that blocks Read tool calls for files exceeding configurable line threshold (default: 500 lines). Protects Claude's context window by suggesting efficient alternatives. Features two-stage size detection for performance (<5KB instant allow, >100KB instant block), context-aware suggestions (Serena for code files, Grep for data files), and configurable threshold via `LARGE_FILE_THRESHOLD` env var or `~/.claude/hook-large-file-guard-config`. Supports `ALLOW_LARGE_READ=1` bypass.
+
+- **hook_utils.py** - Added shared utilities for file analysis: `classify_file()` (binary/code/data/unknown classification), `estimate_tokens()` (3.5 chars/token ratio), `count_lines()` (memory-efficient streaming line counter).
+
 ## [0.1.6] - 2025-12-21
 
 ### Added

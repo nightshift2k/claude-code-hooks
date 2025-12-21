@@ -7,6 +7,7 @@ This module provides common functionality for hook scripts including:
 - Disabled hook checking
 - Environment variable access
 - Centralized ANSI color formatting
+- File classification and analysis
 """
 
 import os
@@ -148,3 +149,110 @@ def exit_if_disabled(hook_name: Optional[str] = None) -> None:
     """
     if is_hook_disabled(hook_name):
         sys.exit(0)
+
+
+def classify_file(file_path: str) -> str:
+    """
+    Classify a file by its extension into binary, code, data, or unknown.
+
+    Args:
+        file_path: Path to the file to classify.
+
+    Returns:
+        One of: "binary", "code", "data", "unknown"
+
+    Example:
+        classify_file("image.png")      # Returns "binary"
+        classify_file("script.py")      # Returns "code"
+        classify_file("config.json")    # Returns "data"
+        classify_file("readme.txt")     # Returns "unknown"
+    """
+    # Define file type extensions
+    BINARY_EXTENSIONS = {
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".pdf",
+        ".ico",
+        ".woff",
+        ".ttf",
+        ".zip",
+        ".tar",
+        ".gz",
+    }
+    CODE_EXTENSIONS = {
+        ".py",
+        ".js",
+        ".ts",
+        ".go",
+        ".rs",
+        ".java",
+        ".cpp",
+        ".c",
+        ".h",
+        ".rb",
+        ".php",
+        ".swift",
+        ".kt",
+        ".tsx",
+        ".jsx",
+    }
+    DATA_EXTENSIONS = {".json", ".yaml", ".yml", ".xml", ".csv", ".toml"}
+
+    # Get extension in lowercase
+    ext = Path(file_path).suffix.lower()
+
+    if ext in BINARY_EXTENSIONS:
+        return "binary"
+    elif ext in CODE_EXTENSIONS:
+        return "code"
+    elif ext in DATA_EXTENSIONS:
+        return "data"
+    else:
+        return "unknown"
+
+
+def estimate_tokens(content: str) -> int:
+    """
+    Estimate the number of tokens in text content.
+
+    Uses empirically validated 3.5 characters per token ratio.
+
+    Args:
+        content: Text content to estimate tokens for.
+
+    Returns:
+        Estimated number of tokens as an integer.
+
+    Example:
+        estimate_tokens("hello world")  # Returns 3 (11 chars / 3.5 ≈ 3)
+        estimate_tokens("a" * 3500)     # Returns 1000
+    """
+    if not content:
+        return 0
+    return int(len(content) / 3.5)
+
+
+def count_lines(file_path: str) -> int:
+    """
+    Count lines in a file using memory-efficient streaming.
+
+    Args:
+        file_path: Path to the file to count lines in.
+
+    Returns:
+        Number of lines in the file, or 0 on error.
+
+    Example:
+        count_lines("script.py")     # Returns line count
+        count_lines("/nonexistent")  # Returns 0
+    """
+    try:
+        count = 0
+        with open(file_path, encoding="utf-8", errors="ignore") as f:
+            for _ in f:
+                count += 1
+        return count
+    except OSError:
+        return 0

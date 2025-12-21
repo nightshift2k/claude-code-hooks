@@ -26,3 +26,4 @@ uv.lock
 # Claude Code hook configuration (local preferences)
 .claude/disabled-hooks
 .claude/hook-*-mode-on
+.tmp/

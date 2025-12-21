@@ -67,6 +67,7 @@ Merge the hook configurations from `settings.json.example` into your `~/.claude/
 | `changelog-reminder.py` | PreToolUse (Bash) | Blocks commits without CHANGELOG.md when meaningful files changed |
 | `release-check.py` | PreToolUse (Bash) | Blocks git tag if version not in CHANGELOG.md |
 | `python-uv-enforcer.py` | PreToolUse (Bash) | Enforces `uv` over direct pip/python usage |
+| `large-file-guard.py` | PreToolUse (Read) | Blocks reading large files (>500 lines), suggests Serena/Grep alternatives |
 
 ### 📝 Context & Prompts
 
@@ -81,7 +82,7 @@ Merge the hook configurations from `settings.json.example` into your `~/.claude/
 
 | File | Description |
 |------|-------------|
-| `hook_utils.py` | Shared utilities: `exit_if_disabled()`, `Colors` class |
+| `hook_utils.py` | Shared utilities: `exit_if_disabled()`, `Colors`, `classify_file()`, `estimate_tokens()`, `count_lines()` |
 
 ---
 
@@ -107,6 +108,7 @@ graph TB
         PTU --> RC[release-check]
         PTU --> PUE[python-uv-enforcer]
         PTU --> GCM[git-commit-message-filter]
+        PTU --> LFG[large-file-guard]
     end
 ```
 
@@ -132,6 +134,9 @@ changelog-reminder
 # Skip release checks for non-release projects
 release-check
 release-reminder
+
+# Allow reading large files for data exploration
+large-file-guard
 ```
 
 Lines starting with `#` are comments.
@@ -425,6 +430,50 @@ $ pip install requests
    uv pip install ...
 💡 Learn more: https://github.com/astral-sh/uv
 ```
+
+</details>
+
+<details>
+<summary><b>large-file-guard.py</b></summary>
+
+### large-file-guard.py
+
+Blocks reading large files to protect Claude's context window.
+
+```
+$ [Read tool on 625-line file]
+❌ Large file: tests/test_large_file_guard.py (625 lines, ~6,379 tokens est.)
+
+📝 Alternatives: Serena find_symbol • Grep patterns • Read offset/limit
+
+💡 Bypass: ALLOW_LARGE_READ=1
+```
+
+**Two-stage size detection:**
+- **< 5KB**: Instant allow (skip line counting)
+- **5-100KB**: Accurate line counting
+- **> 100KB**: Instant block with estimated lines
+
+**Context-aware suggestions:**
+- **Code files** (.py, .js, .ts, etc.): Suggests Serena `find_symbol`
+- **Data files** (.json, .yaml, .csv): Suggests Grep patterns (no Serena)
+
+**Configuration:**
+```bash
+# Set custom threshold (default: 500 lines)
+export LARGE_FILE_THRESHOLD=1000
+
+# Or use config file
+echo "1000" > ~/.claude/hook-large-file-guard-config
+
+# Bypass for single read
+ALLOW_LARGE_READ=1 claude
+```
+
+**Skip conditions:**
+- Binary files (.png, .pdf, .zip, etc.)
+- Reads with `offset` or `limit` parameters (targeted reads)
+- `ALLOW_LARGE_READ=1` environment variable
 
 </details>
 
