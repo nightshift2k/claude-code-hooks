@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CI/CD** - Added GitHub Actions test workflow (`test.yml`) that runs pytest across Python 3.8-3.12 on push to main and pull requests.
+
+- **changelog-reminder.py** - New hook that blocks git commits when meaningful files are staged without CHANGELOG.md update. Enforces changelog hygiene by requiring documentation of production code changes. Filters out non-meaningful files (tests, .github, __pycache__, .md, .gitignore, .claude). Supports `SKIP_CHANGELOG_CHECK=1` bypass and project-level disabling via `.claude/disabled-hooks`.
+
+- **release-reminder.py** - New UserPromptSubmit hook that reminds about release verification checklist when release-related keywords are detected (`release`, `tag v`, `version bump`, `prepare release`, version patterns). Provides pre-flight checklist for CHANGELOG.md updates, version file synchronization, clean working tree, and branch verification.
+
+- **release-check.py** - New PreToolUse Bash hook that blocks `git tag v*` commands when the version is not found in CHANGELOG.md. Simple safety net to ensure documentation is updated before releases. Supports `SKIP_RELEASE_CHECK=1` bypass. Fail-open for projects without CHANGELOG.md.
+
 ## [0.1.3] - 2025-12-21
 
 ### Added
@@ -23,46 +33,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **doc-update-check.py** - Fixed `extract_merge_target()` to correctly parse branch names when options like `--no-ff`, `--squash`, or `-m` are used.
 
-- **doc-update-check.py** - Fixed three additional issues:
-  - SKIP_DOC_CHECK=1 now works anywhere in command chain
-  - Stricter gh pr merge detection prevents false triggers on release URLs
-  - Pre-merge diff now correctly checks the branch being merged when already on main
-
-## [0.1.2] - 2025-12-20
-
-### Fixed
-
-- **prompt-flag-appender.py** - Session-based mode flag files are now correctly evaluated per-project (`$CLAUDE_PROJECT_DIR/.claude/hook-*-mode-on`) instead of globally (`~/.claude/`). This allows different projects to have different active modes.
-
-## [0.1.1] - 2025-12-20
+## [0.1.2] - 2025-12-14
 
 ### Added
 
-- **doc-update-check.py** - Blocks merge-to-main operations without documentation updates, ensuring code changes are accompanied by documentation updates (*.md files). Supports `.doc-check-ignore` patterns for excluding planning/temporary docs, and `SKIP_DOC_CHECK=1` environment variable for bypass.
+- **prompt-flag-appender.py** - Session-based modes via flag files. Enable persistent modes by creating `.claude/hook-<mode>-mode-on` files in project root. Example: `touch .claude/hook-approval-mode-on` enables approval mode for entire session without per-prompt triggers.
 
-- **prompt-flag-appender.py** - Added approval mode feature with two usage patterns:
-  - Per-prompt trigger: `+approval` appends approval mode fragment to single prompt
-  - Session mode: `touch .claude/hook-approval-mode-on` enables approval mode for project
-  - Supports extensible session-based modes via `hook-*-mode-on` flag file pattern
+- **doc-update-check.py** - Optional `.doc-check-ignore` file for excluding documentation files from merge-to-main check. Supports gitignore-style patterns (*, **, path matching). Useful for excluding planning docs, brainstorms, and temporary markdown files.
 
-### Fixed
+### Changed
 
-- **doc-update-check.py** - Fixed bypass not working with inline environment variable (`SKIP_DOC_CHECK=1 git merge ...`). The hook now parses the command string in addition to checking `os.environ`.
+- **prompt-flag-appender.py** - Refactored trigger processing to support both per-prompt triggers (+ultrathink) and session modes (flag files). Session modes are injected first, then prompt triggers are appended.
 
-- **git-safety-check.py** - Fixed false positive when detecting protected branch deletion in chained commands. The regex now properly requires whitespace after the `-d/-D` flag and uses word boundaries to ensure exact branch name matching. Previously, commands like `git branch -d fix/feature && git push origin main` were incorrectly blocked because the greedy `.*` pattern matched from `-d` all the way to `main`.
-
-## [0.1.0] - 2025-12-14
+## [0.1.1] - 2025-12-12
 
 ### Added
 
-- **hook_utils.py** - Shared utilities with `exit_if_disabled()` and `Colors` class
-- **environment-awareness.py** - Injects date, time, timezone, OS, and working directory at session start
-- **git-branch-protection.py** - Blocks file edits on protected branches (main, master, production, prod)
-- **git-safety-check.py** - Blocks `--no-verify` flag and protected branch deletion
-- **git-commit-message-filter.py** - Blocks Claude auto-generated attribution in commits
-- **python-uv-enforcer.py** - Enforces `uv` over direct pip/python usage
-- **rules-reminder.py** - Reminds about CLAUDE.md and .claude/rules/* on session start and prompts
-- **prompt-flag-appender.py** - Injects markdown fragments via `+ultrathink`, `+absolute` triggers
-- Per-project disable mechanism via `.claude/disabled-hooks` file
-- MIT License
-- README with installation and usage documentation
+- **doc-update-check.py** - New hook that blocks merge-to-main operations unless documentation files (*.md) have been modified. Enforces documentation hygiene by requiring doc updates when merging to main/master branches. Supports `SKIP_DOC_CHECK=1` environment variable bypass.
+
+- **git-commit-message-filter.py** - New hook that blocks git commit commands containing Claude auto-generated markers (Generated with Claude Code, Co-Authored-By: Claude, etc.). Ensures custom, meaningful commit messages instead of auto-generated attribution.
+
+### Fixed
+
+- **git-safety-check.py** - Fixed false positive when `--no-verify` appears in commit messages or heredocs. Now only blocks when `--no-verify` is used as a command argument, not when it's part of message content.
+
+- **git-safety-check.py** - Fixed false positive when protected branch names appear in chained commands. Now uses word boundaries and specific separators (&&, ;, |, end of command) to match exact branch deletion commands.
+
+## [0.1.0] - 2025-12-11
+
+### Added
+
+- **git-branch-protection.py** - Blocks file edits on protected branches (main, master, production, prod). Prevents accidental modifications on stable branches.
+
+- **git-safety-check.py** - Blocks dangerous git operations including `--no-verify` flag usage and deletion of protected branches (main, master, production, prod).
+
+- **python-uv-enforcer.py** - Enforces modern Python tooling by blocking direct pip/python/pytest usage and suggesting uv alternatives.
+
+- **environment-awareness.py** - Injects environment context (date, time, timezone, OS, working directory) at session start and resume.
+
+- **rules-reminder.py** - Reminds Claude to check project rules (CLAUDE.md, .claude/rules/*) on session start and when implementation keywords are detected.
+
+- **prompt-flag-appender.py** - Appends markdown fragments based on trigger words (+ultrathink, +absolute, +approval). Enables per-prompt behavior modification.
+
+- **hook_utils.py** - Shared utilities for hooks including Colors class (ANSI color formatting), exit_if_disabled() (hook disabling via .claude/disabled-hooks), and get_hook_name() (automatic hook name detection).
+
+### Infrastructure
+
+- Project structure with hooks/, tests/, and comprehensive documentation.
+- settings.json.example with hook configurations for SessionStart, UserPromptSubmit, and PreToolUse events.
+- Python 3.8+ compatibility with stdlib-only dependencies.
+- MIT License.

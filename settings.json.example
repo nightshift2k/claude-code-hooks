@@ -25,6 +25,10 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/rules-reminder.py"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/release-reminder.py"
           }
         ]
       }
@@ -48,6 +52,14 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/doc-update-check.py"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/changelog-reminder.py"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/release-check.py"
           }
         ]
       },

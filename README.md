@@ -64,6 +64,8 @@ Merge the hook configurations from `settings.json.example` into your `~/.claude/
 | `git-safety-check.py` | PreToolUse (Bash) | Blocks `--no-verify`, protected branch deletion |
 | `git-commit-message-filter.py` | PreToolUse (Bash) | Blocks Claude auto-generated attribution in commits |
 | `doc-update-check.py` | PreToolUse (Bash) | Blocks merge-to-main without documentation updates |
+| `changelog-reminder.py` | PreToolUse (Bash) | Blocks commits without CHANGELOG.md when meaningful files changed |
+| `release-check.py` | PreToolUse (Bash) | Blocks git tag if version not in CHANGELOG.md |
 | `python-uv-enforcer.py` | PreToolUse (Bash) | Enforces `uv` over direct pip/python usage |
 
 ### 📝 Context & Prompts
@@ -72,6 +74,7 @@ Merge the hook configurations from `settings.json.example` into your `~/.claude/
 |------|-------|-------------|
 | `environment-awareness.py` | SessionStart | Injects date, time, timezone, OS, and working directory |
 | `rules-reminder.py` | SessionStart, UserPromptSubmit | Reminds Claude about CLAUDE.md and .claude/rules/* |
+| `release-reminder.py` | UserPromptSubmit | Reminds about release verification checklist when release keywords detected |
 | `prompt-flag-appender.py` | UserPromptSubmit | Injects markdown via `+ultrathink`, `+absolute`, `+approval`, `+seqthi` triggers |
 
 ### 🔧 Shared Utilities
@@ -96,9 +99,12 @@ graph TB
         SS --> RULES1[rules-reminder]
         UPS --> PFA[prompt-flag-appender]
         UPS --> RULES2[rules-reminder]
+        UPS --> RR[release-reminder]
         PTU --> GSC[git-safety-check]
         PTU --> GBP[git-branch-protection]
         PTU --> DUC[doc-update-check]
+        PTU --> CR[changelog-reminder]
+        PTU --> RC[release-check]
         PTU --> PUE[python-uv-enforcer]
         PTU --> GCM[git-commit-message-filter]
     end
@@ -119,6 +125,13 @@ git-branch-protection
 
 # Skip doc check during rapid prototyping
 doc-update-check
+
+# Skip changelog check for non-release branches
+changelog-reminder
+
+# Skip release checks for non-release projects
+release-check
+release-reminder
 ```
 
 Lines starting with `#` are comments.
@@ -239,6 +252,134 @@ docs/brainstorms/**
 </details>
 
 <details>
+<summary><b>changelog-reminder.py</b></summary>
+
+### changelog-reminder.py
+
+Ensures CHANGELOG.md is updated when committing meaningful code changes.
+
+```
+$ git commit -m "Add new feature"
+❌ Meaningful changes without CHANGELOG.md update!
+
+📝 Staged files requiring changelog:
+   - hooks/new-hook.py
+   - src/utils.py
+
+💡 Options:
+   1. Update CHANGELOG.md, then retry commit
+   2. SKIP_CHANGELOG_CHECK=1 git commit ...
+```
+
+**Meaningful files include:**
+- Production code (hooks/, src/, lib/, etc.)
+- Configuration files (pyproject.toml, package.json, etc.)
+
+**Non-meaningful files (excluded):**
+- Test files (tests/*)
+- GitHub workflows (.github/*)
+- Python cache (__pycache__, *.pyc)
+- Documentation (*.md)
+- Configuration (.gitignore, conftest.py)
+- Claude directory (.claude/*)
+
+**Skip conditions:**
+- `SKIP_CHANGELOG_CHECK=1` environment variable (inline or in command)
+- Hook disabled via `.claude/disabled-hooks`
+- Only non-meaningful files staged
+- CHANGELOG.md already staged
+
+**Use cases:**
+- Enforce changelog updates for all production code changes
+- Skip for documentation-only commits
+- Skip for test-only commits
+- Manual bypass for special cases (e.g., committing the hook itself)
+
+</details>
+
+<details>
+<summary><b>release-reminder.py</b></summary>
+
+### release-reminder.py
+
+Reminds about release verification steps when release-related keywords are detected in user prompts.
+
+```
+$ "prepare a release for v0.1.4"
+---
+## Release Verification Required
+
+Before tagging/releasing, ensure:
+1. CHANGELOG.md has version section matching the release (not just [Unreleased])
+2. All version files are synchronized (check project-specific: pyproject.toml, package.json, etc.)
+3. Working tree is clean
+4. You're on the correct branch
+
+Confirm these checks before proceeding with git tag.
+---
+```
+
+**Trigger keywords:**
+- `release`
+- `tag v`
+- `version bump`
+- `prepare release`
+- Version patterns like `v0.1.`, `v0.2.`, `v1.0.`, etc.
+
+**Hook behavior:**
+- Outputs reminder only when keywords detected
+- Silent for non-release prompts
+- Works in conjunction with `release-check.py` for comprehensive release safety
+
+**Use cases:**
+- Prevent forgotten changelog updates before releases
+- Ensure version synchronization across files
+- Remind about clean working tree requirements
+- Pre-flight checklist for release operations
+
+</details>
+
+<details>
+<summary><b>release-check.py</b></summary>
+
+### release-check.py
+
+Blocks git tag operations when version is not documented in CHANGELOG.md.
+
+```
+$ git tag v0.1.4
+❌ Version 0.1.4 not found in CHANGELOG.md!
+
+📝 Before tagging, update CHANGELOG.md:
+   - Rename [Unreleased] section to [0.1.4]
+   - Add release date
+
+💡 Bypass: SKIP_RELEASE_CHECK=1 git tag v0.1.4
+```
+
+**Version detection:**
+- Extracts version from `git tag v*` commands
+- Supports annotated tags: `git tag -a v1.2.3 -m "message"`
+- Simple string search in CHANGELOG.md
+
+**Skip conditions:**
+- `SKIP_RELEASE_CHECK=1` environment variable (inline or in command)
+- Hook disabled via `.claude/disabled-hooks`
+- CHANGELOG.md doesn't exist (allows tags for projects without changelog)
+- Tags without 'v' prefix (e.g., `git tag 1.2.3`)
+
+**Use cases:**
+- Prevent releasing versions without changelog entries
+- Enforce documentation before tagging
+- Safety net for release automation
+- Works best with Keep a Changelog format
+
+**Projects without CHANGELOG.md:**
+If your project doesn't use CHANGELOG.md, the hook will automatically allow tags (fail-open behavior).
+
+</details>
+
+<details>
 <summary><b>python-uv-enforcer.py</b></summary>
 
 ### python-uv-enforcer.py
@@ -265,7 +406,7 @@ Injects system environment context at session start and resume.
 
 ```
 ## Environment
-- Date: 2025-12-14 (Sunday)
+- Date: 2025-12-14 (Saturday)
 - Time: 14:32 CET
 - OS: macOS 15.1
 - Directory: ~/code/my-project
@@ -407,7 +548,8 @@ touch .claude/hook-verbose-mode-on
       {
         "hooks": [
           {"type": "command", "command": "~/.claude/hooks/prompt-flag-appender.py"},
-          {"type": "command", "command": "~/.claude/hooks/rules-reminder.py"}
+          {"type": "command", "command": "~/.claude/hooks/rules-reminder.py"},
+          {"type": "command", "command": "~/.claude/hooks/release-reminder.py"}
         ]
       }
     ],
@@ -418,7 +560,9 @@ touch .claude/hook-verbose-mode-on
           {"type": "command", "command": "~/.claude/hooks/git-commit-message-filter.py"},
           {"type": "command", "command": "~/.claude/hooks/python-uv-enforcer.py"},
           {"type": "command", "command": "~/.claude/hooks/git-safety-check.py"},
-          {"type": "command", "command": "~/.claude/hooks/doc-update-check.py"}
+          {"type": "command", "command": "~/.claude/hooks/doc-update-check.py"},
+          {"type": "command", "command": "~/.claude/hooks/changelog-reminder.py"},
+          {"type": "command", "command": "~/.claude/hooks/release-check.py"}
         ]
       },
       {
@@ -453,6 +597,8 @@ touch .claude/hook-verbose-mode-on
 | `CLAUDE_PROJECT_DIR` | Project root directory |
 | `CLAUDE_CODE_REMOTE` | "true" if web, empty if CLI |
 | `SKIP_DOC_CHECK` | "1" to bypass doc-update-check hook |
+| `SKIP_CHANGELOG_CHECK` | "1" to bypass changelog-reminder hook |
+| `SKIP_RELEASE_CHECK` | "1" to bypass release-check hook |
 | `DOC_CHECK_USE_AI` | "1" to enable AI-powered merge detection |
 
 </details>
@@ -535,6 +681,15 @@ echo '{"hook_event_name": "SessionStart"}' | python3 rules-reminder.py
 
 # Test doc-update-check hook
 echo '{"tool_name": "Bash", "tool_input": {"command": "git merge feature"}}' | python3 doc-update-check.py
+
+# Test changelog-reminder hook
+echo '{"tool_name": "Bash", "tool_input": {"command": "git commit -m 'Add feature'"}}' | python3 changelog-reminder.py
+
+# Test release-reminder hook
+echo '{"hook_event_name": "UserPromptSubmit", "prompt": "prepare release v0.1.4"}' | python3 release-reminder.py
+
+# Test release-check hook
+echo '{"tool_name": "Bash", "tool_input": {"command": "git tag v0.1.4"}}' | python3 release-check.py
 
 # Test prompt-flag-appender with triggers
 echo '{"hook_event_name": "UserPromptSubmit", "prompt": "fix this +ultrathink +approval"}' | python3 prompt-flag-appender.py
