@@ -10,6 +10,12 @@
           },
           {
             "type": "command",
+            // large-file-awareness: Scans project for large files at session start
+            // Config: LARGE_FILE_THRESHOLD env var or largeFileThreshold setting (default: 500 lines)
+            "command": "~/.claude/hooks/large-file-awareness.py"
+          },
+          {
+            "type": "command",
             "command": "~/.claude/hooks/rules-reminder.py"
           }
         ]

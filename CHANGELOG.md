@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **large-file-awareness.py** - New SessionStart hook that scans project at session start and injects awareness of large files (>500 lines) to enable efficient navigation strategies. Works with large-file-guard for defense-in-depth. Features git-based file discovery with os.walk fallback, top 10 largest files display with tool recommendations (Serena for code, Grep for data, Read offset/limit for text), and configurable threshold via `LARGE_FILE_THRESHOLD` env var or `largeFileThreshold` in settings.json.
+
 - **large-file-guard.py** - New PreToolUse hook that blocks Read tool calls for files exceeding configurable line threshold (default: 500 lines). Protects Claude's context window by suggesting efficient alternatives. Features two-stage size detection for performance (<5KB instant allow, >100KB instant block), context-aware suggestions (Serena for code files, Grep for data files), and configurable threshold via `LARGE_FILE_THRESHOLD` env var or `~/.claude/hook-large-file-guard-config`. Supports `ALLOW_LARGE_READ=1` bypass.
 
-- **hook_utils.py** - Added shared utilities for file analysis: `classify_file()` (binary/code/data/unknown classification), `estimate_tokens()` (3.5 chars/token ratio), `count_lines()` (memory-efficient streaming line counter).
+- **hook_utils.py** - Added shared utilities for file analysis: `classify_file()` (binary/code/data/unknown classification), `estimate_tokens()` (3.5 chars/token ratio), `count_lines()` (memory-efficient streaming line counter), `get_large_file_threshold()` (configurable threshold with settings.json, env var, and default fallback).
 
 ## [0.1.6] - 2025-12-21
 

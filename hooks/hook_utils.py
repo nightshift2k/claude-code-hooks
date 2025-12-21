@@ -10,6 +10,7 @@ This module provides common functionality for hook scripts including:
 - File classification and analysis
 """
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -256,3 +257,50 @@ def count_lines(file_path: str) -> int:
         return count
     except OSError:
         return 0
+
+
+def get_large_file_threshold() -> int:
+    """
+    Get large file threshold from configuration.
+
+    Priority order:
+    1. ~/.claude/settings.json (largeFileThreshold key)
+    2. LARGE_FILE_THRESHOLD environment variable
+    3. Default: 500 lines
+
+    Returns:
+        Threshold value in lines.
+
+    Example:
+        # With settings.json containing {"largeFileThreshold": 1000}
+        get_large_file_threshold()  # Returns 1000
+
+        # With LARGE_FILE_THRESHOLD=750
+        get_large_file_threshold()  # Returns 750
+
+        # With no configuration
+        get_large_file_threshold()  # Returns 500
+    """
+    # Try settings.json first
+    try:
+        home = os.environ.get("HOME")
+        if home:
+            settings_path = Path(home) / ".claude" / "settings.json"
+            if settings_path.is_file():
+                with open(settings_path, encoding="utf-8") as f:
+                    settings = json.load(f)
+                    if "largeFileThreshold" in settings:
+                        return int(settings["largeFileThreshold"])
+    except (OSError, ValueError, json.JSONDecodeError):
+        pass
+
+    # Try environment variable second
+    try:
+        threshold = os.environ.get("LARGE_FILE_THRESHOLD")
+        if threshold:
+            return int(threshold)
+    except ValueError:
+        pass
+
+    # Return default
+    return 500

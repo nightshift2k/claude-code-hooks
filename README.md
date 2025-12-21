@@ -74,6 +74,7 @@ Merge the hook configurations from `settings.json.example` into your `~/.claude/
 | Hook | Event | Description |
 |------|-------|-------------|
 | `environment-awareness.py` | SessionStart | Injects date, time, timezone, OS, and working directory |
+| `large-file-awareness.py` | SessionStart | Scans project at session start, injects awareness of large files (>500 lines) to enable efficient navigation strategies (Serena, Grep, Read offset/limit) |
 | `rules-reminder.py` | SessionStart, UserPromptSubmit | Reminds Claude about CLAUDE.md and .claude/rules/* |
 | `release-reminder.py` | UserPromptSubmit | Reminds about release verification checklist when release keywords detected |
 | `prompt-flag-appender.py` | UserPromptSubmit | Injects markdown via `+ultrathink`, `+absolute`, `+approval`, `+seqthi` triggers |

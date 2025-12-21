@@ -7,8 +7,13 @@ Tests all utility functions:
 - get_hook_name()
 - is_hook_disabled()
 - exit_if_disabled()
+- classify_file()
+- estimate_tokens()
+- count_lines()
+- get_large_file_threshold()
 """
 
+import json
 import sys
 from pathlib import Path
 from unittest.mock import patch
@@ -235,3 +240,97 @@ class TestExitIfDisabled:
                 hook_utils.exit_if_disabled(None)
 
             assert exc_info.value.code == 0
+
+
+# =============================================================================
+# Tests for get_large_file_threshold()
+# =============================================================================
+
+
+class TestGetLargeFileThreshold:
+    """Test get_large_file_threshold() function."""
+
+    def test_returns_default_when_no_config(self, monkeypatch, tmp_path) -> None:
+        """Should return 500 when no configuration is present."""
+        # Clear environment
+        monkeypatch.delenv("LARGE_FILE_THRESHOLD", raising=False)
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        assert hook_utils.get_large_file_threshold() == 500
+
+    def test_reads_from_settings_json(self, monkeypatch, tmp_path) -> None:
+        """Should read threshold from ~/.claude/settings.json."""
+        # Setup settings.json
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+        settings_file = claude_dir / "settings.json"
+        settings_file.write_text(json.dumps({"largeFileThreshold": 1000}))
+
+        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.delenv("LARGE_FILE_THRESHOLD", raising=False)
+
+        assert hook_utils.get_large_file_threshold() == 1000
+
+    def test_reads_from_env_var(self, monkeypatch, tmp_path) -> None:
+        """Should read threshold from LARGE_FILE_THRESHOLD env var."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.setenv("LARGE_FILE_THRESHOLD", "750")
+
+        assert hook_utils.get_large_file_threshold() == 750
+
+    def test_settings_json_takes_priority_over_env(
+        self, monkeypatch, tmp_path
+    ) -> None:
+        """Should prioritize settings.json over env var."""
+        # Setup settings.json
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+        settings_file = claude_dir / "settings.json"
+        settings_file.write_text(json.dumps({"largeFileThreshold": 1000}))
+
+        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.setenv("LARGE_FILE_THRESHOLD", "750")
+
+        assert hook_utils.get_large_file_threshold() == 1000
+
+    def test_handles_malformed_json(self, monkeypatch, tmp_path) -> None:
+        """Should fallback to env/default when settings.json is malformed."""
+        # Setup malformed settings.json
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+        settings_file = claude_dir / "settings.json"
+        settings_file.write_text("{invalid json")
+
+        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.setenv("LARGE_FILE_THRESHOLD", "750")
+
+        assert hook_utils.get_large_file_threshold() == 750
+
+    def test_handles_invalid_env_var(self, monkeypatch, tmp_path) -> None:
+        """Should fallback to default when env var is invalid."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.setenv("LARGE_FILE_THRESHOLD", "not-a-number")
+
+        assert hook_utils.get_large_file_threshold() == 500
+
+    def test_handles_missing_home_env(self, monkeypatch) -> None:
+        """Should fallback to env/default when HOME is not set."""
+        monkeypatch.delenv("HOME", raising=False)
+        monkeypatch.setenv("LARGE_FILE_THRESHOLD", "600")
+
+        assert hook_utils.get_large_file_threshold() == 600
+
+    def test_handles_missing_threshold_key_in_settings(
+        self, monkeypatch, tmp_path
+    ) -> None:
+        """Should fallback to env/default when settings.json lacks threshold key."""
+        # Setup settings.json without largeFileThreshold key
+        claude_dir = tmp_path / ".claude"
+        claude_dir.mkdir()
+        settings_file = claude_dir / "settings.json"
+        settings_file.write_text(json.dumps({"otherKey": "value"}))
+
+        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.setenv("LARGE_FILE_THRESHOLD", "600")
+
+        assert hook_utils.get_large_file_threshold() == 600

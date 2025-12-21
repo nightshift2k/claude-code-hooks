@@ -5,6 +5,7 @@ Safety guardrails, standard enforcement, and context injection for Claude Code.
 
 ## Hooks
 - `environment-awareness` - Injects date, time, timezone, OS, directory at session start
+- `large-file-awareness` - Scans project at session start, warns about large files for efficient navigation
 - `git-branch-protection` - Blocks edits to protected branches (main, master, production, prod)
 - `git-safety-check` - Blocks --no-verify flag and protected branch deletion
 - `git-commit-message-filter` - Blocks commits with Claude auto-generated attribution
