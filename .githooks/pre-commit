@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+echo "🔍 Running ruff format check..."
+uv run ruff format --check hooks/
+
+echo "🔍 Running ruff lint..."
+uv run ruff check hooks/
+
+echo "🧪 Running tests..."
+uv run pytest tests/ -q
+
+echo "✅ All checks passed!"
