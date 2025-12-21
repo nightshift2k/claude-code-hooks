@@ -53,6 +53,8 @@ Safety guardrails, standard enforcement, and context injection for Claude Code.
 
 **Merging**: Squash before merge: `git reset --soft origin/main && git commit`
 
+**Releasing**: After tagging, create GitHub release: `gh release create v0.1.x --notes "..."`
+
 ## Security
 - Never log/print stdin data (may contain secrets)
 - Validate JSON input, fail silently on malformed data

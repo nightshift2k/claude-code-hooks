@@ -45,6 +45,7 @@ Before tagging/releasing, ensure:
 2. All version files are synchronized (check project-specific: pyproject.toml, package.json, etc.)
 3. Working tree is clean
 4. You're on the correct branch
+5. After `git tag` and `git push --tags`, run `gh release create`
 
 Confirm these checks before proceeding with git tag.
 ---"""

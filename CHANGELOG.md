@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **release-check.py** - Human-in-the-loop confirmation for release operations. Hook now requires explicit user approval before `git tag v*` (via `CONFIRM_TAG=1`) and `gh release create v*` (via `CONFIRM_RELEASE=1`). Ensures humans stay in the loop for critical release actions.
+
+- **release-reminder.py** - Added step 5 to checklist: reminder to run `gh release create` after tagging.
+
+- **CLAUDE.md** - Added Releasing workflow to Git Conventions section.
+
 ## [0.1.5] - 2025-12-21
 
 ### Added
