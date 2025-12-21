@@ -34,7 +34,7 @@ def extract_version(command: str) -> Optional[str]:
         Version string (e.g., "0.1.4") or None if not found.
     """
     # Match git tag v{version} pattern
-    match = re.search(r'git\s+tag\s+(?:-[a-z]\s+)?v(\d+\.\d+\.\d+)', command)
+    match = re.search(r"git\s+tag\s+(?:-[a-z]\s+)?v(\d+\.\d+\.\d+)", command)
     if match:
         return match.group(1)
     return None
@@ -94,7 +94,7 @@ def main() -> None:
             sys.exit(0)
 
         # Only check git tag v* commands
-        if not re.search(r'git\s+tag\s+(?:-[a-z]\s+)?v\d+\.\d+\.\d+', command):
+        if not re.search(r"git\s+tag\s+(?:-[a-z]\s+)?v\d+\.\d+\.\d+", command):
             sys.exit(0)
 
         # Extract version from command
