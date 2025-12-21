@@ -15,7 +15,7 @@ import platform
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 from hook_utils import exit_if_disabled
 

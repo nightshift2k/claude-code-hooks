@@ -15,8 +15,7 @@ import subprocess
 import sys
 from typing import List, Optional
 
-from hook_utils import exit_if_disabled, Colors
-
+from hook_utils import Colors, exit_if_disabled
 
 # Branches where edits are blocked
 PROTECTED_BRANCHES: List[str] = [

@@ -28,11 +28,11 @@ Example:
     Result: "Refactor this code\n\n[approval.md contents]"
 """
 
-from pathlib import Path
 import json
 import os
 import sys
-from typing import Dict, List, Tuple, Any
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
 from hook_utils import exit_if_disabled
 
@@ -44,6 +44,7 @@ TRIGGER_FILE_MAP: Dict[str, str] = {
     "+ultrathink": "ultrathink.md",
     "+absolute": "absolute.md",
     "+approval": "approval.md",
+    "+seqthi": "sequential-thinking.md",
 }
 
 

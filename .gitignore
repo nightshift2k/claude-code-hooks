@@ -1,7 +1,28 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
+*.egg-info/
+dist/
+build/
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Tools
 .mypy_cache/
+.ruff_cache/
+
+# OS/Editor
 .DS_Store
 *.swp
 *.swo
+
+# uv
+uv.lock
+
+# Claude Code hook configuration (local preferences)
+.claude/disabled-hooks
+.claude/hook-*-mode-on

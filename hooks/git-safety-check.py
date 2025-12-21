@@ -13,9 +13,9 @@ This hook prevents dangerous Git operations including:
 import json
 import re
 import sys
-from typing import Dict, Any
+from typing import Any, Dict
 
-from hook_utils import exit_if_disabled, Colors
+from hook_utils import Colors, exit_if_disabled
 
 
 def check_git_command(command: str) -> None:

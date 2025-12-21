@@ -125,7 +125,7 @@ def is_hook_disabled(hook_name: Optional[str] = None) -> bool:
 
         return False
 
-    except (OSError, IOError):
+    except OSError:
         # If we can't read the file, assume the hook is not disabled
         return False
 

@@ -25,7 +25,6 @@ from typing import Any, Dict
 
 from hook_utils import exit_if_disabled
 
-
 # Regex pattern matching keywords that indicate Claude is about to make changes
 # or plan implementation work
 TRIGGER_KEYWORDS = re.compile(

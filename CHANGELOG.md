@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.1.3] - 2025-12-21
+
+### Added
+
+- **prompt-flag-appender.py** - Added `+seqthi` trigger for invoking sequential thinking MCP tool during complex analysis tasks.
+
+- **doc-update-check.py** - AI-powered merge detection mode using Claude Haiku. Enable with `DOC_CHECK_USE_AI=1` environment variable or `.claude/hook-doc-check-ai-mode-on` flag file for semantic understanding of complex merge commands.
+
+- **Test Suite** - Comprehensive pytest test suite with 221 tests covering all hooks. Run with `uv run pytest tests/ -v`.
+
+### Fixed
+
+- **doc-update-check.py** - Fixed false positives from commit messages containing "merge" text. Now correctly extracts git subcommand instead of substring matching.
+
+- **doc-update-check.py** - Fixed `extract_merge_target()` to correctly parse branch names when options like `--no-ff`, `--squash`, or `-m` are used.
+
+- **doc-update-check.py** - Fixed three additional issues:
+  - SKIP_DOC_CHECK=1 now works anywhere in command chain
+  - Stricter gh pr merge detection prevents false triggers on release URLs
+  - Pre-merge diff now correctly checks the branch being merged when already on main
+
 ## [0.1.2] - 2025-12-20
 
 ### Fixed

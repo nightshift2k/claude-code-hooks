@@ -72,7 +72,7 @@ Merge the hook configurations from `settings.json.example` into your `~/.claude/
 |------|-------|-------------|
 | `environment-awareness.py` | SessionStart | Injects date, time, timezone, OS, and working directory |
 | `rules-reminder.py` | SessionStart, UserPromptSubmit | Reminds Claude about CLAUDE.md and .claude/rules/* |
-| `prompt-flag-appender.py` | UserPromptSubmit | Injects markdown via `+ultrathink`, `+absolute`, `+approval` triggers |
+| `prompt-flag-appender.py` | UserPromptSubmit | Injects markdown via `+ultrathink`, `+absolute`, `+approval`, `+seqthi` triggers |
 
 ### 🔧 Shared Utilities
 
@@ -199,6 +199,21 @@ $ git merge feature-branch  # on main branch
 🔍 Branch diff: git diff main...HEAD --name-only
 ```
 
+**Detection Modes:**
+- **Regex (default):** Fast, pattern-based detection
+- **AI Mode (opt-in):** Uses Claude Haiku for semantic understanding
+
+**Enable AI Mode:**
+```bash
+# Per-command
+DOC_CHECK_USE_AI=1 git merge feature-branch
+
+# Per-project (persistent)
+touch .claude/hook-doc-check-ai-mode-on
+```
+
+AI mode is useful for complex merge scenarios where regex patterns may fail.
+
 **Detects merge-to-main via:**
 - `git merge` while on main branch
 - `git checkout main && git merge` command chains
@@ -293,6 +308,7 @@ Appends markdown fragments based on trigger words or session modes.
 | `+ultrathink` | ultrathink.md | Deep analysis mode |
 | `+absolute` | absolute.md | Direct, no-filler responses |
 | `+approval` | approval.md | Human-in-the-loop mode (propose, don't execute) |
+| `+seqthi` | sequential-thinking.md | Invoke sequential thinking MCP |
 
 **Usage:**
 ```
@@ -437,6 +453,7 @@ touch .claude/hook-verbose-mode-on
 | `CLAUDE_PROJECT_DIR` | Project root directory |
 | `CLAUDE_CODE_REMOTE` | "true" if web, empty if CLI |
 | `SKIP_DOC_CHECK` | "1" to bypass doc-update-check hook |
+| `DOC_CHECK_USE_AI` | "1" to enable AI-powered merge detection |
 
 </details>
 
@@ -480,6 +497,24 @@ if __name__ == "__main__":
 2. Make executable: `chmod +x hooks/your-hook.py`
 3. Add to `settings.json.example`
 4. Test: `echo '{"tool_name": "Bash", "tool_input": {"command": "test"}}' | python3 your-hook.py`
+
+</details>
+
+<details>
+<summary><b>Running Tests</b></summary>
+
+### Running Tests
+
+```bash
+# Run all tests
+uv run pytest tests/ -v
+
+# Run with coverage
+uv run pytest tests/ --cov=hooks
+
+# Run specific test file
+uv run pytest tests/test_git_safety_check.py -v
+```
 
 </details>
 
