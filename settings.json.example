@@ -60,11 +60,15 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/release-check.py"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/git-branch-protection.py"
           }
         ]
       },
       {
-        "matcher": "Edit|Write|mcp__morphllm.*|mcp__serena.*(replace|insert).*",
+        "matcher": "^(Edit|Write)$|mcp__morphllm.*|mcp__serena.*(replace|insert).*",
         "hooks": [
           {
             "type": "command",

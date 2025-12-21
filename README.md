@@ -60,7 +60,7 @@ Merge the hook configurations from `settings.json.example` into your `~/.claude/
 
 | Hook | Event | Description |
 |------|-------|-------------|
-| `git-branch-protection.py` | PreToolUse (Edit/Write) | Blocks file edits on protected branches (main, master, production, prod) |
+| `git-branch-protection.py` | PreToolUse (Edit/Write/Bash) | Blocks file edits on protected branches; analyzes bash commands for file-writing patterns |
 | `git-safety-check.py` | PreToolUse (Bash) | Blocks `--no-verify`, protected branch deletion |
 | `git-commit-message-filter.py` | PreToolUse (Bash) | Blocks Claude auto-generated attribution in commits |
 | `doc-update-check.py` | PreToolUse (Bash) | Blocks merge-to-main without documentation updates |
@@ -145,7 +145,11 @@ Lines starting with `#` are comments.
 
 ### git-branch-protection.py
 
-Prevents accidental edits on protected branches.
+Prevents accidental edits on protected branches and analyzes bash commands for file-writing operations.
+
+#### Edit/Write Tool Behavior (Blocked)
+
+Direct file modifications via Edit or Write tools are blocked on protected branches:
 
 ```
 $ edit file on main branch
@@ -156,7 +160,34 @@ $ edit file on main branch
    echo "git-branch-protection" >> .claude/disabled-hooks
 ```
 
+#### Bash Command Behavior (Reflective Analysis)
+
+When bash commands contain potential file-writing patterns, the hook outputs a reflective question instead of blocking:
+
+```
+$ sed -i 's/foo/bar/' config.txt  # on main branch
+⚠️ Potential file-writing command detected on protected branch 'main'
+
+Command: sed -i 's/foo/bar/' config.txt
+
+📝 Before proceeding, verify:
+   Does this command actually write to files?
+   If yes, create a feature branch first.
+```
+
+**Detected patterns:**
+- In-place editing: `sed -i`, `perl -i`
+- File redirection: `>`, `>>`
+- Tee operations: `tee` (excluding `/dev/null`, `/dev/stdout`, `/dev/stderr`)
+- Heredocs: `<<`, `<<-`
+
+**Safe patterns (excluded):**
+- Redirection to `/dev/null`, `/dev/stdout`, `/dev/stderr`
+- Read-only commands (grep, cat, ls, etc.)
+
 **Protected branches:** main, master, production, prod
+
+**Design rationale:** Bash commands use reflective analysis rather than blocking to reduce false positives while still promoting awareness of file-writing operations on protected branches.
 
 </details>
 
@@ -562,11 +593,12 @@ touch .claude/hook-verbose-mode-on
           {"type": "command", "command": "~/.claude/hooks/git-safety-check.py"},
           {"type": "command", "command": "~/.claude/hooks/doc-update-check.py"},
           {"type": "command", "command": "~/.claude/hooks/changelog-reminder.py"},
-          {"type": "command", "command": "~/.claude/hooks/release-check.py"}
+          {"type": "command", "command": "~/.claude/hooks/release-check.py"},
+          {"type": "command", "command": "~/.claude/hooks/git-branch-protection.py"}
         ]
       },
       {
-        "matcher": "Edit|Write|mcp__morphllm.*|mcp__serena.*(replace|insert).*",
+        "matcher": "^(Edit|Write)$|mcp__morphllm.*|mcp__serena.*(replace|insert).*",
         "hooks": [
           {"type": "command", "command": "~/.claude/hooks/git-branch-protection.py"}
         ]

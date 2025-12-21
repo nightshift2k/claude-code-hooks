@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2025-12-21
+
+### Added
+
+- **git-branch-protection.py** - Bash file-write pattern detection. Hook now analyzes bash commands for potential file-writing operations (`sed -i`, `perl -i`, `>`, `>>`, `tee`, heredocs) and outputs a reflective question asking Claude to verify if the command writes files when on protected branches. Unlike Edit/Write tools (which are blocked), bash commands trigger analysis rather than blocking to reduce false positives.
+
+### Fixed
+
+- **settings.json.example** - Fixed git-branch-protection matcher regex from `Edit|Write|...` to `^(Edit|Write)$|...` to prevent false positives with TodoWrite tool.
+
 ## [0.1.4] - 2025-12-21
 
 ### Added
