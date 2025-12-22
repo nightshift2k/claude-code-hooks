@@ -22,7 +22,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Any, Dict, List
+from typing import Any
 
 from hook_utils import Colors, exit_if_disabled
 
@@ -77,7 +77,7 @@ def is_meaningful_file(file_path: str) -> bool:
     return True
 
 
-def get_staged_files() -> List[str]:
+def get_staged_files() -> list[str]:
     """
     Get list of files currently staged for commit.
 
@@ -103,7 +103,7 @@ def get_staged_files() -> List[str]:
         return []
 
 
-def is_changelog_staged(staged_files: List[str]) -> bool:
+def is_changelog_staged(staged_files: list[str]) -> bool:
     """
     Check if CHANGELOG.md is in the staged files.
 
@@ -141,7 +141,7 @@ def main() -> None:
 
         # Read hook data from stdin
         tool_use_json = sys.stdin.read()
-        tool_use: Dict[str, Any] = json.loads(tool_use_json)
+        tool_use: dict[str, Any] = json.loads(tool_use_json)
 
         # Only process Bash commands
         if tool_use.get("tool_name") != "Bash":

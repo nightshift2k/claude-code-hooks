@@ -5,16 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.1.8] - 2025-12-22
+
+### Added
+
+- **serena-awareness.py** - New UserPromptSubmit hook that detects Serena-configured projects on first prompt, suggesting `activate_project` or `onboarding` for optimal MCP integration. Features session-aware first-prompt detection via marker files, aggressive mode toggle via flag file (`.claude/hook-serena-awareness-aggressive-on`), stdlib-only YAML parsing, language detection for 30+ programming languages, and self-cleaning session markers (7-day expiry).
+
+### Changed
+
+- **serena-awareness.py** - Session markers now stored in project-local `.claude/hook_serena_awareness_session_markers/` instead of global `~/.claude/session_markers/`.
+
+### Fixed
+
+- **Security: CLAUDE_PROJECT_DIR** - Replaced dangerous `Path.cwd()` and `os.getcwd()` with `CLAUDE_PROJECT_DIR` environment variable in `large-file-awareness.py`, `release-check.py`, and `doc-update-check.py`. The env var is stable across directory changes, preventing potential path confusion attacks.
+
 ## [0.1.7] - 2025-12-21
 
 ### Added
 
 - **large-file-awareness.py** - New SessionStart hook that scans project at session start and injects awareness of large files (>500 lines) to enable efficient navigation strategies. Works with large-file-guard for defense-in-depth. Features git-based file discovery with os.walk fallback, top 10 largest files display with tool recommendations (Serena for code, Grep for data, Read offset/limit for text), and configurable threshold via `LARGE_FILE_THRESHOLD` env var or `largeFileThreshold` in settings.json.
 
-- **large-file-guard.py** - New PreToolUse hook that blocks Read tool calls for files exceeding configurable line threshold (default: 500 lines). Protects Claude's context window by suggesting efficient alternatives. Features two-stage size detection for performance (<5KB instant allow, >100KB instant block), context-aware suggestions (Serena for code files, Grep for data files), and configurable threshold via `LARGE_FILE_THRESHOLD` env var or `~/.claude/hook-large-file-guard-config`. Supports `ALLOW_LARGE_READ=1` bypass.
 
+
+- **hook_utils.py** - Added language detection utilities: `FilenameMatcher` class for glob-pattern matching, `Language` enum with 30+ programming languages (Python, TypeScript, Rust, Go, Java, etc.) and their file patterns, `detect_project_languages()` function that scans directory trees. Also added utilities for file analysis: `classify_file()`, `estimate_tokens()`, `count_lines()`, `get_large_file_threshold()`.
+
+### Changed
+
+- **Python requirement** - Bumped minimum Python version from 3.8 to 3.12 for modern type hint support (dict, list, X | None syntax)
+- **All hooks** - Applied ruff auto-fixes to modernize type hints: `Dict` → `dict`, `List` → `list`, `Optional[X]` → `X | None`
+- **CI workflows** - Updated test.yml and lint.yml to run only on Python 3.12 (removed 3.8, 3.9, 3.10, 3.11 from matrix)
+- **pyproject.toml** - Updated `requires-python = ">=3.12"` and `target-version = "py312"`
+- **README.md** - Updated Python badge from 3.8+ to 3.12+, added serena-awareness to features table
 - **hook_utils.py** - Added shared utilities for file analysis: `classify_file()` (binary/code/data/unknown classification), `estimate_tokens()` (3.5 chars/token ratio), `count_lines()` (memory-efficient streaming line counter), `get_large_file_threshold()` (configurable threshold with settings.json, env var, and default fallback).
-
 ## [0.1.6] - 2025-12-21
 
 ### Added

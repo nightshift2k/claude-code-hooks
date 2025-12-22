@@ -30,7 +30,6 @@ import json
 import os
 import subprocess
 import sys
-from typing import Dict, List
 
 from hook_utils import (
     classify_file,
@@ -60,7 +59,7 @@ EXCLUDE_DIRS = {
 }
 
 
-def get_project_files() -> List[str]:
+def get_project_files() -> list[str]:
     """
     Get project files using git when available, fallback to os.walk.
 
@@ -72,6 +71,10 @@ def get_project_files() -> List[str]:
     Returns:
         List of relative file paths.
     """
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    if not project_dir:
+        return walk_with_excludes()
+
     try:
         # Check if we're in a git repo
         check = subprocess.run(
@@ -79,7 +82,7 @@ def get_project_files() -> List[str]:
             capture_output=True,
             text=True,
             timeout=2,
-            cwd=os.getcwd(),
+            cwd=project_dir,
         )
 
         if check.returncode == 0 and check.stdout.strip() == "true":
@@ -89,7 +92,7 @@ def get_project_files() -> List[str]:
                 capture_output=True,
                 text=True,
                 timeout=5,
-                cwd=os.getcwd(),
+                cwd=project_dir,
             )
 
             if result.returncode == 0:
@@ -103,7 +106,7 @@ def get_project_files() -> List[str]:
     return walk_with_excludes()
 
 
-def walk_with_excludes() -> List[str]:
+def walk_with_excludes() -> list[str]:
     """
     Walk directory tree with standard exclusions.
 
@@ -115,9 +118,9 @@ def walk_with_excludes() -> List[str]:
         List of relative file paths.
     """
     files = []
-    cwd = os.getcwd()
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", os.getcwd())
 
-    for root, dirs, filenames in os.walk(cwd):
+    for root, dirs, filenames in os.walk(project_dir):
         # Modify dirs in-place to skip excluded directories
         dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
 
@@ -129,7 +132,7 @@ def walk_with_excludes() -> List[str]:
                 continue
 
             # Convert to relative path
-            rel_path = os.path.relpath(full_path, cwd)
+            rel_path = os.path.relpath(full_path, project_dir)
             files.append(rel_path)
 
     return files
@@ -158,7 +161,7 @@ def recommend_tool(file_type: str) -> str:
         return "Read offset/limit"
 
 
-def analyze_files(files: List[str]) -> List[Dict[str, any]]:
+def analyze_files(files: list[str]) -> list[dict[str, any]]:
     """
     Analyze files and identify large ones.
 
@@ -230,7 +233,7 @@ def analyze_files(files: List[str]) -> List[Dict[str, any]]:
     return large_files
 
 
-def print_action_guidance(shown: List[Dict[str, any]]) -> None:
+def print_action_guidance(shown: list[dict[str, any]]) -> None:
     """
     Print tool-specific guidance based on file types present.
 
@@ -251,7 +254,7 @@ def print_action_guidance(shown: List[Dict[str, any]]) -> None:
         print(f"\nAction: {', '.join(guidance)}.")
 
 
-def print_awareness(large_files: List[Dict[str, any]]) -> None:
+def print_awareness(large_files: list[dict[str, any]]) -> None:
     """
     Print LLM-optimized awareness message.
 

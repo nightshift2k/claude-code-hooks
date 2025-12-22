@@ -32,7 +32,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from hook_utils import exit_if_disabled
 
@@ -40,7 +40,7 @@ from hook_utils import exit_if_disabled
 TRIGGER_PREFIX = "+"
 
 # Map trigger words to markdown filenames in prompt-fragments/ directory
-TRIGGER_FILE_MAP: Dict[str, str] = {
+TRIGGER_FILE_MAP: dict[str, str] = {
     "+ultrathink": "ultrathink.md",
     "+absolute": "absolute.md",
     "+approval": "approval.md",
@@ -48,7 +48,7 @@ TRIGGER_FILE_MAP: Dict[str, str] = {
 }
 
 
-def get_active_mode_fragments() -> List[str]:
+def get_active_mode_fragments() -> list[str]:
     """
     Scan project's .claude/ for hook-*-mode-on files and load corresponding fragments.
 
@@ -70,7 +70,7 @@ def get_active_mode_fragments() -> List[str]:
 
     claude_dir = Path(project_dir) / ".claude"
     fragments_dir = Path(__file__).resolve().parent / "prompt-fragments"
-    fragments: List[str] = []
+    fragments: list[str] = []
 
     if not claude_dir.is_dir():
         return fragments
@@ -85,7 +85,7 @@ def get_active_mode_fragments() -> List[str]:
     return fragments
 
 
-def split_prompt_and_triggers(prompt: str) -> Tuple[str, List[str]]:
+def split_prompt_and_triggers(prompt: str) -> tuple[str, list[str]]:
     """
     Extract trailing trigger tokens from prompt and return cleaned prompt with trigger list.
 
@@ -107,7 +107,7 @@ def split_prompt_and_triggers(prompt: str) -> Tuple[str, List[str]]:
         ("Fix this code", ["+ultrathink", "+absolute"])  # +unknown is not mapped
     """
     text = prompt.rstrip()
-    triggers: List[str] = []
+    triggers: list[str] = []
     last_keep = len(text)
 
     while last_keep > 0:
@@ -140,7 +140,7 @@ def split_prompt_and_triggers(prompt: str) -> Tuple[str, List[str]]:
     triggers.reverse()
     # Deduplicate while preserving the original order (left-to-right)
     seen: set = set()
-    unique_triggers: List[str] = []
+    unique_triggers: list[str] = []
     for trigger in triggers:
         if trigger in seen:
             continue
@@ -150,7 +150,7 @@ def split_prompt_and_triggers(prompt: str) -> Tuple[str, List[str]]:
     return base_prompt, unique_triggers
 
 
-def load_fragments(triggers: List[str]) -> List[str]:
+def load_fragments(triggers: list[str]) -> list[str]:
     """
     Load markdown file contents for each recognized trigger.
 
@@ -170,7 +170,7 @@ def load_fragments(triggers: List[str]) -> List[str]:
     """
     base_dir = Path(__file__).resolve().parent
     fragments_dir = base_dir / "prompt-fragments"
-    fragments: List[str] = []
+    fragments: list[str] = []
 
     for trigger in triggers:
         filename = TRIGGER_FILE_MAP.get(trigger)
@@ -184,7 +184,7 @@ def load_fragments(triggers: List[str]) -> List[str]:
     return fragments
 
 
-def build_prompt(prompt: str, fragments: List[str]) -> str:
+def build_prompt(prompt: str, fragments: list[str]) -> str:
     """
     Combine the base prompt with markdown fragments.
 
@@ -203,7 +203,7 @@ def build_prompt(prompt: str, fragments: List[str]) -> str:
     if not fragments:
         return prompt
 
-    parts: List[str] = []
+    parts: list[str] = []
     if prompt:
         parts.append(prompt)
     parts.extend(fragments)
@@ -216,7 +216,7 @@ def main() -> None:
     exit_if_disabled()
 
     try:
-        input_data: Dict[str, Any] = json.load(sys.stdin)
+        input_data: dict[str, Any] = json.load(sys.stdin)
         prompt = input_data.get("prompt", "")
         if not isinstance(prompt, str):
             raise ValueError("prompt must be a string")

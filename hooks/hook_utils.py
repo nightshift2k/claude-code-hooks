@@ -8,13 +8,15 @@ This module provides common functionality for hook scripts including:
 - Environment variable access
 - Centralized ANSI color formatting
 - File classification and analysis
+- Language detection for code projects
 """
 
+import fnmatch
 import json
 import os
 import sys
+from enum import Enum
 from pathlib import Path
-from typing import Optional
 
 
 class Colors:
@@ -71,7 +73,7 @@ def get_hook_name() -> str:
     return hook_name
 
 
-def is_hook_disabled(hook_name: Optional[str] = None) -> bool:
+def is_hook_disabled(hook_name: str | None = None) -> bool:
     """
     Check if a hook is disabled via the .claude/disabled-hooks file.
 
@@ -132,7 +134,7 @@ def is_hook_disabled(hook_name: Optional[str] = None) -> bool:
         return False
 
 
-def exit_if_disabled(hook_name: Optional[str] = None) -> None:
+def exit_if_disabled(hook_name: str | None = None) -> None:
     """
     Exit the hook script with status 0 if the hook is disabled.
 
@@ -304,3 +306,183 @@ def get_large_file_threshold() -> int:
 
     # Return default
     return 500
+
+
+class FilenameMatcher:
+    """
+    Pattern-based filename matcher using fnmatch for glob-style patterns.
+
+    Supports patterns like *.py, *.js, Makefile, etc.
+    """
+
+    def __init__(self, patterns: list[str]) -> None:
+        """
+        Initialize FilenameMatcher with list of glob patterns.
+
+        Args:
+            patterns: List of glob patterns (e.g., ["*.py", "*.pyi"])
+        """
+        self.patterns = patterns
+
+    def matches(self, filename: str) -> bool:
+        """
+        Check if filename matches any of the stored patterns.
+
+        Args:
+            filename: Filename or path to check
+
+        Returns:
+            True if filename matches any pattern, False otherwise
+
+        Example:
+            matcher = FilenameMatcher(["*.py"])
+            matcher.matches("script.py")        # Returns True
+            matcher.matches("/path/to/file.py") # Returns True
+            matcher.matches("file.txt")         # Returns False
+        """
+        # Extract basename from path
+        basename = Path(filename).name
+
+        # Check against all patterns
+        for pattern in self.patterns:
+            if fnmatch.fnmatch(basename, pattern):
+                return True
+
+        return False
+
+
+class Language(Enum):
+    """
+    Enumeration of programming languages with file pattern matching.
+
+    Based on Serena's language support with display names and file extensions.
+    """
+
+    # Core languages (non-experimental)
+    PYTHON = ("Python", ["*.py", "*.pyi"], False)
+    TYPESCRIPT = ("TypeScript", ["*.ts", "*.tsx"], False)
+    JAVASCRIPT = ("JavaScript", ["*.js", "*.jsx", "*.mjs", "*.cjs"], False)
+    RUST = ("Rust", ["*.rs"], False)
+    GO = ("Go", ["*.go"], False)
+    JAVA = ("Java", ["*.java"], False)
+    KOTLIN = ("Kotlin", ["*.kt", "*.kts"], False)
+    SCALA = ("Scala", ["*.scala", "*.sc"], False)
+    C = ("C", ["*.c", "*.h"], False)
+    CPP = ("C++", ["*.cpp", "*.hpp", "*.cc", "*.hh", "*.cxx", "*.hxx"], False)
+    CSHARP = ("C#", ["*.cs"], False)
+    RUBY = ("Ruby", ["*.rb"], False)
+    PHP = ("PHP", ["*.php"], False)
+    SWIFT = ("Swift", ["*.swift"], False)
+    OBJECTIVE_C = ("Objective-C", ["*.m", "*.mm"], False)
+    LUA = ("Lua", ["*.lua"], False)
+    PERL = ("Perl", ["*.pl", "*.pm"], False)
+    R = ("R", ["*.r", "*.R"], False)
+    JULIA = ("Julia", ["*.jl"], False)
+    ELIXIR = ("Elixir", ["*.ex", "*.exs"], False)
+    ERLANG = ("Erlang", ["*.erl", "*.hrl"], False)
+    HASKELL = ("Haskell", ["*.hs"], False)
+    OCAML = ("OCaml", ["*.ml", "*.mli"], False)
+    CLOJURE = ("Clojure", ["*.clj", "*.cljs", "*.cljc", "*.edn"], False)
+    ZIG = ("Zig", ["*.zig"], False)
+    VUE = ("Vue", ["*.vue"], False)
+    SVELTE = ("Svelte", ["*.svelte"], False)
+    ASTRO = ("Astro", ["*.astro"], False)
+
+    # Experimental languages
+    MARKDOWN = ("Markdown", ["*.md", "*.markdown"], True)
+    YAML = ("YAML", ["*.yaml", "*.yml"], True)
+    TOML = ("TOML", ["*.toml"], True)
+    GROOVY = ("Groovy", ["*.groovy"], True)
+
+    def __init__(
+        self, display_name: str, patterns: list[str], is_experimental: bool
+    ) -> None:
+        """
+        Initialize Language enum member.
+
+        Args:
+            display_name: Human-readable language name
+            patterns: List of file glob patterns for this language
+            is_experimental: Whether language support is experimental
+        """
+        self.display_name = display_name
+        self.patterns = patterns
+        self.is_experimental = is_experimental
+
+    def get_source_fn_matcher(self) -> FilenameMatcher:
+        """
+        Get FilenameMatcher for this language's source files.
+
+        Returns:
+            FilenameMatcher configured with this language's patterns
+
+        Example:
+            matcher = Language.PYTHON.get_source_fn_matcher()
+            matcher.matches("script.py")  # Returns True
+        """
+        return FilenameMatcher(self.patterns)
+
+
+def detect_project_languages(directory: str) -> list[Language]:
+    """
+    Detect programming languages in a project directory.
+
+    Scans the directory tree for source code files matching known language patterns.
+    Excludes experimental languages and common hidden/build directories.
+
+    Args:
+        directory: Root directory to scan
+
+    Returns:
+        List of detected Language enum members (sorted by name)
+
+    Example:
+        languages = detect_project_languages("/path/to/project")
+        if Language.PYTHON in languages:
+            print("Python project detected")
+    """
+    detected_languages = set()
+
+    # Directories to skip during traversal
+    SKIP_DIRS = {
+        ".git",
+        ".svn",
+        ".hg",
+        "node_modules",
+        ".venv",
+        "venv",
+        "__pycache__",
+        "build",
+        "dist",
+        ".egg-info",
+        "target",
+    }
+
+    try:
+        root_path = Path(directory)
+        if not root_path.exists():
+            return []
+
+        # Walk directory tree
+        for current_dir, subdirs, files in os.walk(root_path):
+            # Filter out directories to skip (modify in-place to affect traversal)
+            subdirs[:] = [d for d in subdirs if d not in SKIP_DIRS]
+
+            # Check each file against language patterns
+            for filename in files:
+                for language in Language:
+                    # Skip experimental languages
+                    if language.is_experimental:
+                        continue
+
+                    # Check if file matches this language's patterns
+                    matcher = language.get_source_fn_matcher()
+                    if matcher.matches(filename):
+                        detected_languages.add(language)
+                        break  # Found a match, no need to check other languages
+
+    except OSError:
+        return []
+
+    # Return sorted list for consistent output
+    return sorted(detected_languages, key=lambda lang: lang.display_name)

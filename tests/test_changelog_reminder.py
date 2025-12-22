@@ -16,7 +16,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -43,7 +43,7 @@ main = changelog_reminder.main
 
 
 @pytest.fixture
-def mock_tool_use() -> Dict[str, Any]:
+def mock_tool_use() -> dict[str, Any]:
     """Fixture for basic Bash tool use JSON."""
     return {
         "tool_name": "Bash",
@@ -52,7 +52,7 @@ def mock_tool_use() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def non_bash_tool_use() -> Dict[str, Any]:
+def non_bash_tool_use() -> dict[str, Any]:
     """Fixture for non-Bash tool use."""
     return {
         "tool_name": "Read",
@@ -168,9 +168,7 @@ class TestGetStagedFiles:
 
     def test_returns_empty_list_on_timeout(self) -> None:
         """Should return empty list when git command times out."""
-        with patch(
-            "subprocess.run", side_effect=subprocess.TimeoutExpired("git", 5)
-        ):
+        with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("git", 5)):
             result = get_staged_files()
             assert result == []
 
@@ -318,7 +316,7 @@ class TestMain:
     """Test main() entry point function."""
 
     def test_exits_when_skip_changelog_check_env_set(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should exit 0 when SKIP_CHANGELOG_CHECK=1 in environment."""
         stdin_data = json.dumps(mock_tool_use)
@@ -332,7 +330,7 @@ class TestMain:
         assert exc_info.value.code == 0
 
     def test_exits_when_skip_changelog_check_in_command(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should exit 0 when SKIP_CHANGELOG_CHECK=1 in command string."""
         mock_tool_use["tool_input"]["command"] = (
@@ -348,7 +346,7 @@ class TestMain:
         assert exc_info.value.code == 0
 
     def test_exits_when_skip_changelog_check_inline_in_chain(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should exit 0 when SKIP_CHANGELOG_CHECK=1 appears inline in command chain."""
         mock_tool_use["tool_input"]["command"] = (
@@ -363,9 +361,7 @@ class TestMain:
 
         assert exc_info.value.code == 0
 
-    def test_exits_for_non_bash_tool(
-        self, non_bash_tool_use: Dict[str, Any]
-    ) -> None:
+    def test_exits_for_non_bash_tool(self, non_bash_tool_use: dict[str, Any]) -> None:
         """Should exit 0 for non-Bash tool invocations."""
         stdin_data = json.dumps(non_bash_tool_use)
 
@@ -376,9 +372,7 @@ class TestMain:
 
         assert exc_info.value.code == 0
 
-    def test_exits_when_not_git_commit(
-        self, mock_tool_use: Dict[str, Any]
-    ) -> None:
+    def test_exits_when_not_git_commit(self, mock_tool_use: dict[str, Any]) -> None:
         """Should exit 0 when command is not git commit."""
         mock_tool_use["tool_input"]["command"] = "git status"
         stdin_data = json.dumps(mock_tool_use)
@@ -391,7 +385,7 @@ class TestMain:
         assert exc_info.value.code == 0
 
     def test_exits_when_no_meaningful_files_staged(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should exit 0 when only non-meaningful files are staged."""
         stdin_data = json.dumps(mock_tool_use)
@@ -408,7 +402,7 @@ class TestMain:
         assert exc_info.value.code == 0
 
     def test_exits_when_changelog_is_staged(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should exit 0 when CHANGELOG.md is staged with meaningful files."""
         stdin_data = json.dumps(mock_tool_use)
@@ -425,7 +419,7 @@ class TestMain:
         assert exc_info.value.code == 0
 
     def test_blocks_when_meaningful_files_without_changelog(
-        self, mock_tool_use: Dict[str, Any], capsys
+        self, mock_tool_use: dict[str, Any], capsys
     ) -> None:
         """Should exit 2 and print error when meaningful files staged without CHANGELOG.md."""
         stdin_data = json.dumps(mock_tool_use)
@@ -447,7 +441,7 @@ class TestMain:
         assert "SKIP_CHANGELOG_CHECK=1" in captured.err
 
     def test_shows_meaningful_files_in_error_message(
-        self, mock_tool_use: Dict[str, Any], capsys
+        self, mock_tool_use: dict[str, Any], capsys
     ) -> None:
         """Should show only meaningful files in error message."""
         stdin_data = json.dumps(mock_tool_use)
@@ -459,7 +453,7 @@ class TestMain:
                     return_value=[
                         "hooks/new.py",
                         "tests/test.py",  # Not meaningful
-                        "README.md",       # Not meaningful
+                        "README.md",  # Not meaningful
                         "src/utils.py",
                     ],
                 ):
@@ -476,11 +470,10 @@ class TestMain:
         assert "README.md" not in captured.err
 
     def test_exits_successfully_on_exception(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should exit 0 on unexpected exceptions (silent failure)."""
-        stdin_data = json.dumps(mock_tool_use)
-
+        # mock_tool_use fixture provides context but stdin.read raises before using it
         with patch("changelog_reminder.exit_if_disabled"):
             with patch("sys.stdin.read", side_effect=Exception("Unexpected")):
                 with pytest.raises(SystemExit) as exc_info:
@@ -550,9 +543,7 @@ class TestIntegration:
 
         assert exc_info.value.code == 0
 
-    def test_full_workflow_commit_hook_without_changelog(
-        self, capsys
-    ) -> None:
+    def test_full_workflow_commit_hook_without_changelog(self, capsys) -> None:
         """Test complete workflow: committing hook without CHANGELOG.md."""
         tool_use = {
             "tool_name": "Bash",

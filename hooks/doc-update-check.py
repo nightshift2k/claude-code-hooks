@@ -16,12 +16,12 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from hook_utils import Colors, exit_if_disabled
 
 
-def get_current_branch() -> Optional[str]:
+def get_current_branch() -> str | None:
     """
     Get the current git branch name.
 
@@ -42,7 +42,7 @@ def get_current_branch() -> Optional[str]:
         return None
 
 
-def extract_merge_target(command: str) -> Optional[str]:
+def extract_merge_target(command: str) -> str | None:
     """
     Extract branch name from git merge command.
 
@@ -212,15 +212,18 @@ def is_merge_to_main(command: str) -> bool:
     return False
 
 
-def load_doc_check_ignore_patterns() -> List[str]:
+def load_doc_check_ignore_patterns() -> list[str]:
     """
     Load ignore patterns from .doc-check-ignore file.
 
     Returns:
         List of glob-style patterns to exclude from documentation check.
     """
-    ignore_file = Path.cwd() / ".doc-check-ignore"
-    patterns: List[str] = []
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    if not project_dir:
+        return []  # Can't load ignore file without project directory
+    ignore_file = Path(project_dir) / ".doc-check-ignore"
+    patterns: list[str] = []
 
     if not ignore_file.exists():
         return patterns
@@ -239,7 +242,7 @@ def load_doc_check_ignore_patterns() -> List[str]:
     return patterns
 
 
-def is_ignored(file_path: str, patterns: List[str]) -> bool:
+def is_ignored(file_path: str, patterns: list[str]) -> bool:
     """
     Check if a file path matches any ignore pattern.
 
@@ -275,7 +278,7 @@ def is_ignored(file_path: str, patterns: List[str]) -> bool:
     return False
 
 
-def get_modified_docs(merge_target: Optional[str] = None) -> List[str]:
+def get_modified_docs(merge_target: str | None = None) -> list[str]:
     """
     Get list of modified documentation files in current branch vs main.
 
@@ -331,7 +334,7 @@ def main() -> None:
 
         # Read hook data from stdin
         tool_use_json = sys.stdin.read()
-        tool_use: Dict[str, Any] = json.loads(tool_use_json)
+        tool_use: dict[str, Any] = json.loads(tool_use_json)
 
         # Only process Bash commands
         if tool_use.get("tool_name") != "Bash":

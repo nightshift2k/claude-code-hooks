@@ -20,7 +20,7 @@ Usage:
 import json
 import re
 import sys
-from typing import Any, Dict
+from typing import Any
 
 from hook_utils import exit_if_disabled
 
@@ -64,7 +64,7 @@ def main() -> None:
     exit_if_disabled()
 
     try:
-        input_data: Dict[str, Any] = json.load(sys.stdin)
+        input_data: dict[str, Any] = json.load(sys.stdin)
         event_name = input_data.get("hook_event_name", "")
 
         if event_name == "UserPromptSubmit":

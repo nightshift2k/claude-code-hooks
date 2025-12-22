@@ -10,15 +10,14 @@ Tests all functions:
 - main()
 """
 
+# Import using importlib for hyphenated name
+import importlib.util
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, patch
 
 import pytest
-
-# Import using importlib for hyphenated name
-import importlib.util
 
 hooks_dir = Path(__file__).parent.parent / "hooks"
 spec = importlib.util.spec_from_file_location(
@@ -46,7 +45,7 @@ class TestGetActiveModeFragments:
 
     def test_returns_empty_list_when_no_project_dir(self, monkeypatch) -> None:
         """Should return empty list when CLAUDE_PROJECT_DIR not set."""
-        monkeypatch.delenv('CLAUDE_PROJECT_DIR', raising=False)
+        monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)
         result = get_active_mode_fragments()
         assert result == []
 
@@ -54,8 +53,8 @@ class TestGetActiveModeFragments:
         self, temp_project_dir, monkeypatch
     ) -> None:
         """Should return empty list when .claude directory doesn't exist."""
-        (temp_project_dir / '.claude').rmdir()
-        monkeypatch.setenv('CLAUDE_PROJECT_DIR', str(temp_project_dir))
+        (temp_project_dir / ".claude").rmdir()
+        monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(temp_project_dir))
         result = get_active_mode_fragments()
         assert result == []
 
@@ -64,15 +63,15 @@ class TestGetActiveModeFragments:
     ) -> None:
         """Should load fragment when hook-*-mode-on file exists."""
         # Create flag file
-        flag_file = temp_project_dir / '.claude' / 'hook-approval-mode-on'
+        flag_file = temp_project_dir / ".claude" / "hook-approval-mode-on"
         flag_file.touch()
 
         # Mock fragment file
         fragment_content = "APPROVAL MODE ACTIVE"
-        monkeypatch.setenv('CLAUDE_PROJECT_DIR', str(temp_project_dir))
+        monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(temp_project_dir))
 
-        with patch.object(Path, 'is_file', return_value=True):
-            with patch.object(Path, 'read_text', return_value=fragment_content):
+        with patch.object(Path, "is_file", return_value=True):
+            with patch.object(Path, "read_text", return_value=fragment_content):
                 result = get_active_mode_fragments()
 
         assert len(result) == 1
@@ -83,25 +82,23 @@ class TestGetActiveModeFragments:
     ) -> None:
         """Should skip modes that don't have corresponding fragment files."""
         # Create flag file
-        flag_file = temp_project_dir / '.claude' / 'hook-unknown-mode-on'
+        flag_file = temp_project_dir / ".claude" / "hook-unknown-mode-on"
         flag_file.touch()
 
-        monkeypatch.setenv('CLAUDE_PROJECT_DIR', str(temp_project_dir))
+        monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(temp_project_dir))
 
-        with patch.object(Path, 'is_file', return_value=False):
+        with patch.object(Path, "is_file", return_value=False):
             result = get_active_mode_fragments()
 
         assert result == []
 
-    def test_loads_multiple_mode_fragments(
-        self, temp_project_dir, monkeypatch
-    ) -> None:
+    def test_loads_multiple_mode_fragments(self, temp_project_dir, monkeypatch) -> None:
         """Should load fragments for multiple active modes."""
         # Create multiple flag files
-        (temp_project_dir / '.claude' / 'hook-approval-mode-on').touch()
-        (temp_project_dir / '.claude' / 'hook-ultrathink-mode-on').touch()
+        (temp_project_dir / ".claude" / "hook-approval-mode-on").touch()
+        (temp_project_dir / ".claude" / "hook-ultrathink-mode-on").touch()
 
-        monkeypatch.setenv('CLAUDE_PROJECT_DIR', str(temp_project_dir))
+        monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(temp_project_dir))
 
         fragments = ["APPROVAL MODE", "ULTRATHINK MODE"]
         call_count = [0]
@@ -111,8 +108,8 @@ class TestGetActiveModeFragments:
             call_count[0] += 1
             return result
 
-        with patch.object(Path, 'is_file', return_value=True):
-            with patch.object(Path, 'read_text', side_effect=mock_read_text):
+        with patch.object(Path, "is_file", return_value=True):
+            with patch.object(Path, "read_text", side_effect=mock_read_text):
                 result = get_active_mode_fragments()
 
         assert len(result) == 2
@@ -205,8 +202,8 @@ class TestLoadFragments:
         """Should load single fragment file."""
         fragment_content = "ULTRATHINK MODE ACTIVE"
 
-        with patch.object(Path, 'is_file', return_value=True):
-            with patch.object(Path, 'read_text', return_value=fragment_content):
+        with patch.object(Path, "is_file", return_value=True):
+            with patch.object(Path, "read_text", return_value=fragment_content):
                 result = load_fragments(["+ultrathink"])
 
         assert len(result) == 1
@@ -222,10 +219,17 @@ class TestLoadFragments:
         def mock_read_text(encoding=None):
             return fragments[Path(prompt_flag_appender.__file__).parent.name]
 
-        with patch.object(Path, 'is_file', return_value=True):
-            with patch.object(Path, 'read_text', side_effect=lambda encoding=None: fragments["ultrathink.md"] if "ultrathink" in str(Path) else fragments["absolute.md"]):
+        with patch.object(Path, "is_file", return_value=True):
+            with patch.object(
+                Path,
+                "read_text",
+                side_effect=lambda encoding=None: fragments["ultrathink.md"]
+                if "ultrathink" in str(Path)
+                else fragments["absolute.md"],
+            ):
                 # Mock more carefully
                 call_count = [0]
+
                 def mock_read_text_ordered(encoding=None):
                     if call_count[0] == 0:
                         call_count[0] += 1
@@ -233,7 +237,9 @@ class TestLoadFragments:
                     else:
                         return "ABSOLUTE MODE"
 
-                with patch.object(Path, 'read_text', side_effect=mock_read_text_ordered):
+                with patch.object(
+                    Path, "read_text", side_effect=mock_read_text_ordered
+                ):
                     result = load_fragments(["+ultrathink", "+absolute"])
 
         assert len(result) == 2
@@ -242,7 +248,7 @@ class TestLoadFragments:
 
     def test_skips_nonexistent_files(self) -> None:
         """Should skip triggers without corresponding files."""
-        with patch.object(Path, 'is_file', return_value=False):
+        with patch.object(Path, "is_file", return_value=False):
             result = load_fragments(["+ultrathink"])
 
         assert result == []
@@ -305,12 +311,17 @@ class TestMain:
         input_data = {"prompt": "Fix this code +ultrathink"}
         fragment_content = "ULTRATHINK MODE"
 
-        with patch('prompt_flag_appender.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
-                    with patch('prompt_flag_appender.get_active_mode_fragments', return_value=[]):
-                        with patch.object(Path, 'is_file', return_value=True):
-                            with patch.object(Path, 'read_text', return_value=fragment_content):
+        with patch("prompt_flag_appender.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
+                    with patch(
+                        "prompt_flag_appender.get_active_mode_fragments",
+                        return_value=[],
+                    ):
+                        with patch.object(Path, "is_file", return_value=True):
+                            with patch.object(
+                                Path, "read_text", return_value=fragment_content
+                            ):
                                 main()
 
         captured = capsys.readouterr()
@@ -321,10 +332,13 @@ class TestMain:
         """Should return original prompt when no triggers."""
         input_data = {"prompt": "Fix this code"}
 
-        with patch('prompt_flag_appender.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
-                    with patch('prompt_flag_appender.get_active_mode_fragments', return_value=[]):
+        with patch("prompt_flag_appender.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
+                    with patch(
+                        "prompt_flag_appender.get_active_mode_fragments",
+                        return_value=[],
+                    ):
                         main()
 
         captured = capsys.readouterr()
@@ -336,12 +350,17 @@ class TestMain:
         mode_fragment = "APPROVAL MODE"
         trigger_fragment = "ULTRATHINK MODE"
 
-        with patch('prompt_flag_appender.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
-                    with patch('prompt_flag_appender.get_active_mode_fragments', return_value=[mode_fragment]):
-                        with patch.object(Path, 'is_file', return_value=True):
-                            with patch.object(Path, 'read_text', return_value=trigger_fragment):
+        with patch("prompt_flag_appender.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
+                    with patch(
+                        "prompt_flag_appender.get_active_mode_fragments",
+                        return_value=[mode_fragment],
+                    ):
+                        with patch.object(Path, "is_file", return_value=True):
+                            with patch.object(
+                                Path, "read_text", return_value=trigger_fragment
+                            ):
                                 main()
 
         captured = capsys.readouterr()
@@ -350,9 +369,11 @@ class TestMain:
 
     def test_handles_json_decode_error(self, capsys) -> None:
         """Should exit 1 and print error on JSON decode error."""
-        with patch('prompt_flag_appender.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', side_effect=json.JSONDecodeError("msg", "doc", 0)):
+        with patch("prompt_flag_appender.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch(
+                    "json.load", side_effect=json.JSONDecodeError("msg", "doc", 0)
+                ):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -364,9 +385,9 @@ class TestMain:
         """Should exit 1 when prompt is not a string."""
         input_data = {"prompt": 123}
 
-        with patch('prompt_flag_appender.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("prompt_flag_appender.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -376,9 +397,9 @@ class TestMain:
 
     def test_handles_generic_exception(self, capsys) -> None:
         """Should exit 1 on unexpected exceptions."""
-        with patch('prompt_flag_appender.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', side_effect=Exception("Unexpected error")):
+        with patch("prompt_flag_appender.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", side_effect=Exception("Unexpected error")):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 

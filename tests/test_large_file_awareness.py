@@ -13,11 +13,10 @@ Tests:
 
 import importlib.util
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -76,9 +75,7 @@ class TestGetLargeFileThreshold:
 
         assert get_large_file_threshold() == 750
 
-    def test_settings_json_takes_priority_over_env(
-        self, monkeypatch, tmp_path
-    ) -> None:
+    def test_settings_json_takes_priority_over_env(self, monkeypatch, tmp_path) -> None:
         """Should prioritize settings.json over env var."""
         # Setup settings.json
         claude_dir = tmp_path / ".claude"
@@ -321,9 +318,7 @@ class TestAnalyzeFiles:
         assert result[1]["path"] == "large.py"
         assert result[2]["path"] == "medium.py"
 
-    def test_estimates_tokens_correctly(
-        self, tmp_path, monkeypatch, mock_env
-    ) -> None:
+    def test_estimates_tokens_correctly(self, tmp_path, monkeypatch, mock_env) -> None:
         """Should estimate tokens from file content."""
         monkeypatch.chdir(tmp_path)
         mock_env({"LARGE_FILE_THRESHOLD": "1"})
@@ -653,7 +648,9 @@ class TestMain:
         mock_stdin({"hook_event_name": "SessionStart"})
 
         # Mock get_project_files to raise exception
-        with patch.object(lfa, "get_project_files", side_effect=Exception("Mock error")):
+        with patch.object(
+            lfa, "get_project_files", side_effect=Exception("Mock error")
+        ):
             with pytest.raises(SystemExit) as exc_info:
                 lfa.main()
 

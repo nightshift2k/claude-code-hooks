@@ -8,15 +8,15 @@ Tests all functions:
 - main()
 """
 
+# Import using importlib for hyphenated name
+import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
-
-# Import using importlib for hyphenated name
-import importlib.util
 
 hooks_dir = Path(__file__).parent.parent / "hooks"
 spec = importlib.util.spec_from_file_location(
@@ -149,8 +149,8 @@ class TestCheckVersionInChangelog:
         mock_file = mock_open(read_data=changelog_content)
         mock_path.open = mock_file
 
-        with patch('pathlib.Path.cwd', return_value=Path('/fake')):
-            with patch('pathlib.Path.__truediv__', return_value=mock_path):
+        with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+            with patch("pathlib.Path.__truediv__", return_value=mock_path):
                 result = check_version_in_changelog("0.1.4")
                 assert result is True
 
@@ -166,8 +166,8 @@ class TestCheckVersionInChangelog:
         mock_file = mock_open(read_data=changelog_content)
         mock_path.open = mock_file
 
-        with patch('pathlib.Path.cwd', return_value=Path('/fake')):
-            with patch('pathlib.Path.__truediv__', return_value=mock_path):
+        with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+            with patch("pathlib.Path.__truediv__", return_value=mock_path):
                 result = check_version_in_changelog("1.2.3")
                 assert result is True
 
@@ -183,8 +183,8 @@ class TestCheckVersionInChangelog:
         mock_file = mock_open(read_data=changelog_content)
         mock_path.open = mock_file
 
-        with patch('pathlib.Path.cwd', return_value=Path('/fake')):
-            with patch('pathlib.Path.__truediv__', return_value=mock_path):
+        with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+            with patch("pathlib.Path.__truediv__", return_value=mock_path):
                 result = check_version_in_changelog("0.1.4")
                 assert result is False
 
@@ -193,8 +193,8 @@ class TestCheckVersionInChangelog:
         mock_path = MagicMock()
         mock_path.exists.return_value = False
 
-        with patch('pathlib.Path.cwd', return_value=Path('/fake')):
-            with patch('pathlib.Path.__truediv__', return_value=mock_path):
+        with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+            with patch("pathlib.Path.__truediv__", return_value=mock_path):
                 result = check_version_in_changelog("0.1.4")
                 assert result is True
 
@@ -204,8 +204,8 @@ class TestCheckVersionInChangelog:
         mock_path.exists.return_value = True
         mock_path.open.side_effect = OSError("Permission denied")
 
-        with patch('pathlib.Path.cwd', return_value=Path('/fake')):
-            with patch('pathlib.Path.__truediv__', return_value=mock_path):
+        with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+            with patch("pathlib.Path.__truediv__", return_value=mock_path):
                 result = check_version_in_changelog("0.1.4")
                 assert result is True
 
@@ -220,8 +220,8 @@ The version 2.5.0 is our latest release.
         mock_file = mock_open(read_data=changelog_content)
         mock_path.open = mock_file
 
-        with patch('pathlib.Path.cwd', return_value=Path('/fake')):
-            with patch('pathlib.Path.__truediv__', return_value=mock_path):
+        with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+            with patch("pathlib.Path.__truediv__", return_value=mock_path):
                 result = check_version_in_changelog("2.5.0")
                 assert result is True
 
@@ -236,10 +236,7 @@ class TestMain:
 
     def test_blocks_tag_when_version_not_in_changelog(self, capsys) -> None:
         """Should block tag when version not found in CHANGELOG."""
-        input_data = {
-            "tool_name": "Bash",
-            "tool_input": {"command": "git tag v0.1.4"}
-        }
+        input_data = {"tool_name": "Bash", "tool_input": {"command": "git tag v0.1.4"}}
 
         changelog_content = """# Changelog
 
@@ -252,10 +249,10 @@ class TestMain:
         mock_file = mock_open(read_data=changelog_content)
         mock_path.open = mock_file
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
-                with patch('pathlib.Path.cwd', return_value=Path('/fake')):
-                    with patch('pathlib.Path.__truediv__', return_value=mock_path):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
+                with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+                    with patch("pathlib.Path.__truediv__", return_value=mock_path):
                         with pytest.raises(SystemExit) as exc_info:
                             main()
 
@@ -265,10 +262,7 @@ class TestMain:
 
     def test_requires_confirmation_when_version_in_changelog(self, capsys) -> None:
         """Should require confirmation when version found in CHANGELOG."""
-        input_data = {
-            "tool_name": "Bash",
-            "tool_input": {"command": "git tag v0.1.4"}
-        }
+        input_data = {"tool_name": "Bash", "tool_input": {"command": "git tag v0.1.4"}}
 
         changelog_content = """# Changelog
 
@@ -281,10 +275,10 @@ class TestMain:
         mock_file = mock_open(read_data=changelog_content)
         mock_path.open = mock_file
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
-                with patch('pathlib.Path.cwd', return_value=Path('/fake')):
-                    with patch('pathlib.Path.__truediv__', return_value=mock_path):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
+                with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+                    with patch("pathlib.Path.__truediv__", return_value=mock_path):
                         with pytest.raises(SystemExit) as exc_info:
                             main()
 
@@ -297,7 +291,7 @@ class TestMain:
         """Should allow tag when CONFIRM_TAG=1 is in command."""
         input_data = {
             "tool_name": "Bash",
-            "tool_input": {"command": "CONFIRM_TAG=1 git tag v0.1.4"}
+            "tool_input": {"command": "CONFIRM_TAG=1 git tag v0.1.4"},
         }
 
         changelog_content = """# Changelog
@@ -311,10 +305,10 @@ class TestMain:
         mock_file = mock_open(read_data=changelog_content)
         mock_path.open = mock_file
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
-                with patch('pathlib.Path.cwd', return_value=Path('/fake')):
-                    with patch('pathlib.Path.__truediv__', return_value=mock_path):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
+                with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+                    with patch("pathlib.Path.__truediv__", return_value=mock_path):
                         with pytest.raises(SystemExit) as exc_info:
                             main()
 
@@ -324,7 +318,7 @@ class TestMain:
         """Should block even with CONFIRM_TAG=1 if version not in CHANGELOG."""
         input_data = {
             "tool_name": "Bash",
-            "tool_input": {"command": "CONFIRM_TAG=1 git tag v0.1.4"}
+            "tool_input": {"command": "CONFIRM_TAG=1 git tag v0.1.4"},
         }
 
         changelog_content = """# Changelog
@@ -338,10 +332,10 @@ class TestMain:
         mock_file = mock_open(read_data=changelog_content)
         mock_path.open = mock_file
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
-                with patch('pathlib.Path.cwd', return_value=Path('/fake')):
-                    with patch('pathlib.Path.__truediv__', return_value=mock_path):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
+                with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+                    with patch("pathlib.Path.__truediv__", return_value=mock_path):
                         with pytest.raises(SystemExit) as exc_info:
                             main()
 
@@ -351,18 +345,15 @@ class TestMain:
 
     def test_requires_confirmation_when_changelog_missing(self, capsys) -> None:
         """Should require confirmation when CHANGELOG.md doesn't exist."""
-        input_data = {
-            "tool_name": "Bash",
-            "tool_input": {"command": "git tag v0.1.4"}
-        }
+        input_data = {"tool_name": "Bash", "tool_input": {"command": "git tag v0.1.4"}}
 
         mock_path = MagicMock()
         mock_path.exists.return_value = False
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
-                with patch('pathlib.Path.cwd', return_value=Path('/fake')):
-                    with patch('pathlib.Path.__truediv__', return_value=mock_path):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
+                with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+                    with patch("pathlib.Path.__truediv__", return_value=mock_path):
                         with pytest.raises(SystemExit) as exc_info:
                             main()
 
@@ -372,14 +363,11 @@ class TestMain:
 
     def test_bypasses_check_with_skip_env_var(self) -> None:
         """Should bypass check when SKIP_RELEASE_CHECK=1 in environment."""
-        input_data = {
-            "tool_name": "Bash",
-            "tool_input": {"command": "git tag v0.1.4"}
-        }
+        input_data = {"tool_name": "Bash", "tool_input": {"command": "git tag v0.1.4"}}
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('os.environ.get', return_value='1'):
-                with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("release_check.exit_if_disabled"):
+            with patch("os.environ.get", return_value="1"):
+                with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -389,11 +377,11 @@ class TestMain:
         """Should bypass check when SKIP_RELEASE_CHECK=1 in command."""
         input_data = {
             "tool_name": "Bash",
-            "tool_input": {"command": "SKIP_RELEASE_CHECK=1 git tag v0.1.4"}
+            "tool_input": {"command": "SKIP_RELEASE_CHECK=1 git tag v0.1.4"},
         }
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -403,11 +391,11 @@ class TestMain:
         """Should exit 0 for non-Bash tool invocations."""
         input_data = {
             "tool_name": "Read",
-            "tool_input": {"file_path": "/some/file.txt"}
+            "tool_input": {"file_path": "/some/file.txt"},
         }
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -417,11 +405,11 @@ class TestMain:
         """Should exit 0 for git commands that are not tag v*."""
         input_data = {
             "tool_name": "Bash",
-            "tool_input": {"command": "git commit -m 'test'"}
+            "tool_input": {"command": "git commit -m 'test'"},
         }
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -429,13 +417,10 @@ class TestMain:
 
     def test_exits_for_tag_without_v_prefix(self) -> None:
         """Should exit 0 for tags without 'v' prefix."""
-        input_data = {
-            "tool_name": "Bash",
-            "tool_input": {"command": "git tag 1.2.3"}
-        }
+        input_data = {"tool_name": "Bash", "tool_input": {"command": "git tag 1.2.3"}}
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -443,8 +428,8 @@ class TestMain:
 
     def test_exits_successfully_on_exception(self) -> None:
         """Should exit 0 on unexpected exceptions (silent failure)."""
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', side_effect=Exception("Unexpected error")):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", side_effect=Exception("Unexpected error")):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -452,8 +437,8 @@ class TestMain:
 
     def test_handles_malformed_json(self) -> None:
         """Should exit 0 when stdin contains malformed JSON."""
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value="not valid json"):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value="not valid json"):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -461,13 +446,10 @@ class TestMain:
 
     def test_handles_missing_command(self) -> None:
         """Should exit 0 when command is missing from tool_input."""
-        input_data = {
-            "tool_name": "Bash",
-            "tool_input": {}
-        }
+        input_data = {"tool_name": "Bash", "tool_input": {}}
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -486,11 +468,11 @@ class TestGhReleaseConfirmation:
         """Should require confirmation for gh release create command."""
         input_data = {
             "tool_name": "Bash",
-            "tool_input": {"command": "gh release create v0.1.4 --notes 'Release'"}
+            "tool_input": {"command": "gh release create v0.1.4 --notes 'Release'"},
         }
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -505,11 +487,11 @@ class TestGhReleaseConfirmation:
             "tool_name": "Bash",
             "tool_input": {
                 "command": "CONFIRM_RELEASE=1 gh release create v0.1.4 --notes 'Release'"
-            }
+            },
         }
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -517,13 +499,10 @@ class TestGhReleaseConfirmation:
 
     def test_exits_for_gh_release_list(self) -> None:
         """Should exit 0 for gh release list commands (not create)."""
-        input_data = {
-            "tool_name": "Bash",
-            "tool_input": {"command": "gh release list"}
-        }
+        input_data = {"tool_name": "Bash", "tool_input": {"command": "gh release list"}}
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -533,11 +512,11 @@ class TestGhReleaseConfirmation:
         """Should exit 0 for gh release without v* version."""
         input_data = {
             "tool_name": "Bash",
-            "tool_input": {"command": "gh release create 1.2.3"}
+            "tool_input": {"command": "gh release create 1.2.3"},
         }
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("release_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -547,12 +526,12 @@ class TestGhReleaseConfirmation:
         """Should bypass gh release check with SKIP_RELEASE_CHECK=1."""
         input_data = {
             "tool_name": "Bash",
-            "tool_input": {"command": "gh release create v0.1.4"}
+            "tool_input": {"command": "gh release create v0.1.4"},
         }
 
-        with patch('release_check.exit_if_disabled'):
-            with patch('os.environ.get', return_value='1'):
-                with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("release_check.exit_if_disabled"):
+            with patch("os.environ.get", return_value="1"):
+                with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 

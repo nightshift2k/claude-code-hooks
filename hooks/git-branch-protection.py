@@ -18,12 +18,11 @@ import json
 import re
 import subprocess
 import sys
-from typing import List, Optional, Tuple
 
 from hook_utils import Colors, exit_if_disabled
 
 # Branches where edits are blocked
-PROTECTED_BRANCHES: List[str] = [
+PROTECTED_BRANCHES: list[str] = [
     "main",
     "master",
     "production",
@@ -34,7 +33,7 @@ PROTECTED_BRANCHES: List[str] = [
 SAFE_REDIRECT_TARGETS = ["/dev/null", "/dev/stdout", "/dev/stderr"]
 
 
-def get_current_branch() -> Optional[str]:
+def get_current_branch() -> str | None:
     """
     Get the current git branch name.
 
@@ -55,7 +54,7 @@ def get_current_branch() -> Optional[str]:
         return None
 
 
-def detect_file_write_patterns(command: str) -> List[Tuple[str, str]]:
+def detect_file_write_patterns(command: str) -> list[tuple[str, str]]:
     """
     Detect potential file-writing patterns in a bash command.
 
@@ -74,7 +73,7 @@ def detect_file_write_patterns(command: str) -> List[Tuple[str, str]]:
     if not command:
         return []
 
-    patterns: List[Tuple[str, str]] = []
+    patterns: list[tuple[str, str]] = []
 
     # Check for sed -i (in-place edit)
     sed_match = re.search(r"sed\s+-i(?:\.\w+)?", command)

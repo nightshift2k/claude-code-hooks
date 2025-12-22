@@ -20,12 +20,12 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from hook_utils import Colors, exit_if_disabled
 
 
-def extract_tag_version(command: str) -> Optional[str]:
+def extract_tag_version(command: str) -> str | None:
     """
     Extract version number from git tag command.
 
@@ -39,7 +39,7 @@ def extract_tag_version(command: str) -> Optional[str]:
     return match.group(1) if match else None
 
 
-def extract_release_version(command: str) -> Optional[str]:
+def extract_release_version(command: str) -> str | None:
     """
     Extract version number from gh release create command.
 
@@ -63,7 +63,10 @@ def check_version_in_changelog(version: str) -> bool:
     Returns:
         True if version found or CHANGELOG.md doesn't exist, False otherwise.
     """
-    changelog_path = Path.cwd() / "CHANGELOG.md"
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    if not project_dir:
+        return True  # Can't check without project directory
+    changelog_path = Path(project_dir) / "CHANGELOG.md"
 
     if not changelog_path.exists():
         return True
@@ -85,7 +88,7 @@ def main() -> None:
             sys.exit(0)
 
         # Read hook data from stdin
-        tool_use: Dict[str, Any] = json.loads(sys.stdin.read())
+        tool_use: dict[str, Any] = json.loads(sys.stdin.read())
 
         # Only process Bash commands
         if tool_use.get("tool_name") != "Bash":

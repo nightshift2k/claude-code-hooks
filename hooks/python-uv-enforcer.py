@@ -11,7 +11,7 @@ modern uv package manager across the project.
 import json
 import re
 import sys
-from typing import Any, Dict
+from typing import Any
 
 from hook_utils import Colors, exit_if_disabled
 
@@ -23,7 +23,7 @@ def main() -> None:
 
     try:
         # Read input from Claude Code
-        input_data: Dict[str, Any] = json.load(sys.stdin)
+        input_data: dict[str, Any] = json.load(sys.stdin)
 
         tool_name = input_data.get("tool_name", "")
         tool_input = input_data.get("tool_input", {})

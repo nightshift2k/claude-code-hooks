@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -30,8 +30,8 @@ def mock_stdin(monkeypatch):
     """
     import json
 
-    def _mock(data: Dict[str, Any]) -> None:
-        monkeypatch.setattr('sys.stdin.read', lambda: json.dumps(data))
+    def _mock(data: dict[str, Any]) -> None:
+        monkeypatch.setattr("sys.stdin.read", lambda: json.dumps(data))
 
     return _mock
 
@@ -47,12 +47,13 @@ def mock_subprocess(monkeypatch):
             # Test code that uses subprocess.run
             assert result.returncode == 0
     """
-    def _mock(returncode: int = 0, stdout: str = '', stderr: str = ''):
+
+    def _mock(returncode: int = 0, stdout: str = "", stderr: str = ""):
         result = MagicMock()
         result.returncode = returncode
         result.stdout = stdout
         result.stderr = stderr
-        monkeypatch.setattr('subprocess.run', lambda *a, **kw: result)
+        monkeypatch.setattr("subprocess.run", lambda *a, **kw: result)
         return result
 
     return _mock
@@ -68,7 +69,8 @@ def mock_env(monkeypatch):
             mock_env({"CLAUDE_PROJECT_DIR": "/tmp/project"})
             # Test code that uses os.environ
     """
-    def _mock(env_vars: Dict[str, str]) -> None:
+
+    def _mock(env_vars: dict[str, str]) -> None:
         for k, v in env_vars.items():
             monkeypatch.setenv(k, v)
 
@@ -85,6 +87,6 @@ def temp_project_dir(tmp_path):
             # temp_project_dir is a Path object with .claude/ already created
             (temp_project_dir / ".claude" / "disabled-hooks").write_text("hook-name\n")
     """
-    claude_dir = tmp_path / '.claude'
+    claude_dir = tmp_path / ".claude"
     claude_dir.mkdir()
     return tmp_path

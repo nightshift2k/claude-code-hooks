@@ -7,15 +7,14 @@ Tests all functions:
 - main()
 """
 
+# Import using importlib for hyphenated name
+import importlib.util
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-
-# Import using importlib for hyphenated name
-import importlib.util
 
 hooks_dir = Path(__file__).parent.parent / "hooks"
 spec = importlib.util.spec_from_file_location(
@@ -165,11 +164,11 @@ class TestMain:
         """Should block dangerous git operations."""
         input_data = {
             "tool_name": "Bash",
-            "tool_input": {"command": "git commit --no-verify -m 'test'"}
+            "tool_input": {"command": "git commit --no-verify -m 'test'"},
         }
 
-        with patch('git_safety_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("git_safety_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -179,13 +178,10 @@ class TestMain:
 
     def test_allows_safe_git_command(self) -> None:
         """Should allow safe git operations."""
-        input_data = {
-            "tool_name": "Bash",
-            "tool_input": {"command": "git status"}
-        }
+        input_data = {"tool_name": "Bash", "tool_input": {"command": "git status"}}
 
-        with patch('git_safety_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("git_safety_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -195,11 +191,11 @@ class TestMain:
         """Should exit 0 for non-Bash tool invocations."""
         input_data = {
             "tool_name": "Read",
-            "tool_input": {"file_path": "/some/file.txt"}
+            "tool_input": {"file_path": "/some/file.txt"},
         }
 
-        with patch('git_safety_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("git_safety_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -207,13 +203,10 @@ class TestMain:
 
     def test_exits_for_non_git_command(self) -> None:
         """Should exit 0 for commands without git."""
-        input_data = {
-            "tool_name": "Bash",
-            "tool_input": {"command": "npm install"}
-        }
+        input_data = {"tool_name": "Bash", "tool_input": {"command": "npm install"}}
 
-        with patch('git_safety_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("git_safety_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -221,8 +214,8 @@ class TestMain:
 
     def test_exits_successfully_on_exception(self) -> None:
         """Should exit 0 on unexpected exceptions (silent failure)."""
-        with patch('git_safety_check.exit_if_disabled'):
-            with patch('sys.stdin.read', side_effect=Exception("Unexpected error")):
+        with patch("git_safety_check.exit_if_disabled"):
+            with patch("sys.stdin.read", side_effect=Exception("Unexpected error")):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -230,8 +223,8 @@ class TestMain:
 
     def test_handles_malformed_json(self) -> None:
         """Should exit 0 when stdin contains malformed JSON."""
-        with patch('git_safety_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value="not valid json"):
+        with patch("git_safety_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value="not valid json"):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 
@@ -239,13 +232,10 @@ class TestMain:
 
     def test_handles_missing_command(self) -> None:
         """Should exit 0 when command is missing from tool_input."""
-        input_data = {
-            "tool_name": "Bash",
-            "tool_input": {}
-        }
+        input_data = {"tool_name": "Bash", "tool_input": {}}
 
-        with patch('git_safety_check.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value=json.dumps(input_data)):
+        with patch("git_safety_check.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value=json.dumps(input_data)):
                 with pytest.raises(SystemExit) as exc_info:
                     main()
 

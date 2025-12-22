@@ -21,8 +21,8 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, Any
-from unittest.mock import MagicMock, patch, mock_open
+from typing import Any
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
@@ -53,7 +53,7 @@ main = doc_update_check.main
 
 
 @pytest.fixture
-def mock_tool_use() -> Dict[str, Any]:
+def mock_tool_use() -> dict[str, Any]:
     """Fixture for basic Bash tool use JSON."""
     return {
         "tool_name": "Bash",
@@ -62,7 +62,7 @@ def mock_tool_use() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def non_bash_tool_use() -> Dict[str, Any]:
+def non_bash_tool_use() -> dict[str, Any]:
     """Fixture for non-Bash tool use."""
     return {
         "tool_name": "Read",
@@ -118,9 +118,7 @@ class TestGetCurrentBranch:
 
     def test_returns_none_on_timeout(self) -> None:
         """Should return None when git command times out."""
-        with patch(
-            "subprocess.run", side_effect=subprocess.TimeoutExpired("git", 5)
-        ):
+        with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("git", 5)):
             result = get_current_branch()
             assert result is None
 
@@ -171,7 +169,10 @@ class TestExtractMergeTarget:
         """Should extract branch name when -m option is used."""
         # Note: This tests the realistic case where -m has a single-word message
         # In practice, multi-word messages would be a single shell-escaped argument
-        assert extract_merge_target("git merge -m message feature-branch") == "feature-branch"
+        assert (
+            extract_merge_target("git merge -m message feature-branch")
+            == "feature-branch"
+        )
 
     def test_extracts_branch_with_multiple_options(self) -> None:
         """Should extract branch name with multiple options."""
@@ -192,9 +193,7 @@ class TestExtractMergeTarget:
 
     def test_handles_branch_names_with_slashes(self) -> None:
         """Should handle branch names containing slashes."""
-        assert (
-            extract_merge_target("git merge feature/new-ui") == "feature/new-ui"
-        )
+        assert extract_merge_target("git merge feature/new-ui") == "feature/new-ui"
 
     def test_handles_no_merge_keyword(self) -> None:
         """Should return None if merge is not in command."""
@@ -376,7 +375,9 @@ class TestIsAiModeEnabled:
 
     def test_env_var_takes_precedence_over_flag_file(self) -> None:
         """Env var should work even without checking flag file."""
-        with patch.dict(os.environ, {"DOC_CHECK_USE_AI": "1", "CLAUDE_PROJECT_DIR": ""}):
+        with patch.dict(
+            os.environ, {"DOC_CHECK_USE_AI": "1", "CLAUDE_PROJECT_DIR": ""}
+        ):
             # Even without project dir, env var should enable AI mode
             assert is_ai_mode_enabled() is True
 
@@ -472,9 +473,10 @@ class TestLoadDocCheckIgnorePatterns:
         content = "docs/**\n*-todo.md\ntemp/*.md"
         mock_file = mock_open(read_data=content)
 
-        with patch.object(Path, "exists", return_value=True):
-            with patch.object(Path, "open", mock_file):
-                result = load_doc_check_ignore_patterns()
+        with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+            with patch.object(Path, "exists", return_value=True):
+                with patch.object(Path, "open", mock_file):
+                    result = load_doc_check_ignore_patterns()
 
         assert result == ["docs/**", "*-todo.md", "temp/*.md"]
 
@@ -484,9 +486,10 @@ class TestLoadDocCheckIgnorePatterns:
         """Should skip comment lines and empty lines."""
         mock_file = mock_open(read_data=doc_check_ignore_content)
 
-        with patch.object(Path, "exists", return_value=True):
-            with patch.object(Path, "open", mock_file):
-                result = load_doc_check_ignore_patterns()
+        with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+            with patch.object(Path, "exists", return_value=True):
+                with patch.object(Path, "open", mock_file):
+                    result = load_doc_check_ignore_patterns()
 
         assert result == ["docs/**", "*-todo.md", "temp/*.md"]
 
@@ -511,9 +514,10 @@ class TestLoadDocCheckIgnorePatterns:
         content = "  docs/**  \n  *-todo.md\n"
         mock_file = mock_open(read_data=content)
 
-        with patch.object(Path, "exists", return_value=True):
-            with patch.object(Path, "open", mock_file):
-                result = load_doc_check_ignore_patterns()
+        with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+            with patch.object(Path, "exists", return_value=True):
+                with patch.object(Path, "open", mock_file):
+                    result = load_doc_check_ignore_patterns()
 
         assert result == ["docs/**", "*-todo.md"]
 
@@ -669,9 +673,7 @@ class TestGetModifiedDocs:
 
     def test_returns_empty_list_on_timeout(self) -> None:
         """Should return empty list when git command times out."""
-        with patch(
-            "subprocess.run", side_effect=subprocess.TimeoutExpired("git", 10)
-        ):
+        with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("git", 10)):
             result = get_modified_docs()
 
         assert result == []
@@ -716,7 +718,7 @@ class TestMain:
     """Test main() entry point function."""
 
     def test_exits_when_skip_doc_check_env_set(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should exit 0 when SKIP_DOC_CHECK=1 in environment."""
         stdin_data = json.dumps(mock_tool_use)
@@ -730,12 +732,10 @@ class TestMain:
         assert exc_info.value.code == 0
 
     def test_exits_when_skip_doc_check_in_command(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should exit 0 when SKIP_DOC_CHECK=1 in command string."""
-        mock_tool_use["tool_input"]["command"] = (
-            "SKIP_DOC_CHECK=1 git merge feature"
-        )
+        mock_tool_use["tool_input"]["command"] = "SKIP_DOC_CHECK=1 git merge feature"
         stdin_data = json.dumps(mock_tool_use)
 
         with patch("doc_update_check.exit_if_disabled"):
@@ -746,7 +746,7 @@ class TestMain:
         assert exc_info.value.code == 0
 
     def test_exits_when_skip_doc_check_inline_in_chain(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should exit 0 when SKIP_DOC_CHECK=1 appears inline in command chain."""
         mock_tool_use["tool_input"]["command"] = (
@@ -761,9 +761,7 @@ class TestMain:
 
         assert exc_info.value.code == 0
 
-    def test_exits_for_non_bash_tool(
-        self, non_bash_tool_use: Dict[str, Any]
-    ) -> None:
+    def test_exits_for_non_bash_tool(self, non_bash_tool_use: dict[str, Any]) -> None:
         """Should exit 0 for non-Bash tool invocations."""
         stdin_data = json.dumps(non_bash_tool_use)
 
@@ -774,9 +772,7 @@ class TestMain:
 
         assert exc_info.value.code == 0
 
-    def test_exits_when_not_merge_to_main(
-        self, mock_tool_use: Dict[str, Any]
-    ) -> None:
+    def test_exits_when_not_merge_to_main(self, mock_tool_use: dict[str, Any]) -> None:
         """Should exit 0 when command is not merge-to-main."""
         mock_tool_use["tool_input"]["command"] = "git status"
         stdin_data = json.dumps(mock_tool_use)
@@ -789,16 +785,14 @@ class TestMain:
         assert exc_info.value.code == 0
 
     def test_exits_successfully_when_docs_modified(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should exit 0 when documentation files were modified."""
         stdin_data = json.dumps(mock_tool_use)
 
         with patch("doc_update_check.exit_if_disabled"):
             with patch("sys.stdin.read", return_value=stdin_data):
-                with patch(
-                    "doc_update_check.is_merge_to_main", return_value=True
-                ):
+                with patch("doc_update_check.is_merge_to_main", return_value=True):
                     with patch(
                         "doc_update_check.get_current_branch",
                         return_value="feature",
@@ -813,16 +807,14 @@ class TestMain:
         assert exc_info.value.code == 0
 
     def test_blocks_when_no_docs_modified(
-        self, mock_tool_use: Dict[str, Any], capsys
+        self, mock_tool_use: dict[str, Any], capsys
     ) -> None:
         """Should exit 2 and print error when no docs modified."""
         stdin_data = json.dumps(mock_tool_use)
 
         with patch("doc_update_check.exit_if_disabled"):
             with patch("sys.stdin.read", return_value=stdin_data):
-                with patch(
-                    "doc_update_check.is_merge_to_main", return_value=True
-                ):
+                with patch("doc_update_check.is_merge_to_main", return_value=True):
                     with patch(
                         "doc_update_check.get_current_branch",
                         return_value="feature",
@@ -840,7 +832,7 @@ class TestMain:
         assert "SKIP_DOC_CHECK=1" in captured.err
 
     def test_uses_merge_target_when_on_main_branch(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should extract merge target when already on main branch."""
         mock_tool_use["tool_input"]["command"] = "git merge feature-branch"
@@ -848,9 +840,7 @@ class TestMain:
 
         with patch("doc_update_check.exit_if_disabled"):
             with patch("sys.stdin.read", return_value=stdin_data):
-                with patch(
-                    "doc_update_check.is_merge_to_main", return_value=True
-                ):
+                with patch("doc_update_check.is_merge_to_main", return_value=True):
                     with patch(
                         "doc_update_check.get_current_branch",
                         return_value="main",
@@ -867,16 +857,14 @@ class TestMain:
         mock_get_docs.assert_called_once_with("feature-branch")
 
     def test_no_merge_target_when_on_feature_branch(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should not extract merge target when on feature branch."""
         stdin_data = json.dumps(mock_tool_use)
 
         with patch("doc_update_check.exit_if_disabled"):
             with patch("sys.stdin.read", return_value=stdin_data):
-                with patch(
-                    "doc_update_check.is_merge_to_main", return_value=True
-                ):
+                with patch("doc_update_check.is_merge_to_main", return_value=True):
                     with patch(
                         "doc_update_check.get_current_branch",
                         return_value="feature",
@@ -893,11 +881,10 @@ class TestMain:
         mock_get_docs.assert_called_once_with(None)
 
     def test_exits_successfully_on_exception(
-        self, mock_tool_use: Dict[str, Any]
+        self, mock_tool_use: dict[str, Any]
     ) -> None:
         """Should exit 0 on unexpected exceptions (silent failure)."""
-        stdin_data = json.dumps(mock_tool_use)
-
+        # mock_tool_use fixture provides context but stdin.read raises before using it
         with patch("doc_update_check.exit_if_disabled"):
             with patch("sys.stdin.read", side_effect=Exception("Unexpected")):
                 with pytest.raises(SystemExit) as exc_info:
@@ -978,9 +965,7 @@ class TestIntegration:
 
         assert exc_info.value.code == 0
 
-    def test_full_workflow_merge_on_main_without_docs(
-        self, capsys
-    ) -> None:
+    def test_full_workflow_merge_on_main_without_docs(self, capsys) -> None:
         """Test complete workflow: merge on main without doc updates."""
         tool_use = {
             "tool_name": "Bash",
@@ -1041,10 +1026,11 @@ class TestIntegration:
                     "subprocess.run",
                     side_effect=[mock_git_branch, mock_git_branch, mock_git_diff],
                 ):
-                    with patch.object(Path, "exists", return_value=True):
-                        with patch.object(Path, "open", mock_file):
-                            with pytest.raises(SystemExit) as exc_info:
-                                main()
+                    with patch.dict(os.environ, {"CLAUDE_PROJECT_DIR": "/fake"}):
+                        with patch.object(Path, "exists", return_value=True):
+                            with patch.object(Path, "open", mock_file):
+                                with pytest.raises(SystemExit) as exc_info:
+                                    main()
 
         # All docs ignored, should block
         assert exc_info.value.code == 2

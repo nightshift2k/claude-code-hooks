@@ -6,6 +6,7 @@ Safety guardrails, standard enforcement, and context injection for Claude Code.
 ## Hooks
 - `environment-awareness` - Injects date, time, timezone, OS, directory at session start
 - `large-file-awareness` - Scans project at session start, warns about large files for efficient navigation
+- `serena-awareness` - Detects Serena projects on first prompt, suggests activate_project or onboarding
 - `git-branch-protection` - Blocks edits to protected branches (main, master, production, prod)
 - `git-safety-check` - Blocks --no-verify flag and protected branch deletion
 - `git-commit-message-filter` - Blocks commits with Claude auto-generated attribution
@@ -16,8 +17,8 @@ Safety guardrails, standard enforcement, and context injection for Claude Code.
 - `large-file-guard` - Blocks Read for large files (>500 lines), suggests Serena/Grep alternatives
 
 ## Structure
-- `hooks/*.py` - Hook scripts (stdlib only, Python 3.8+)
-- `hooks/hook_utils.py` - Shared utilities (Colors, exit_if_disabled)
+- `hooks/*.py` - Hook scripts (stdlib only, Python 3.12+)
+- `hooks/hook_utils.py` - Shared utilities (Colors, exit_if_disabled, Language detection)
 - `hooks/prompt-fragments/*.md` - Prompt injection templates
 - `settings.json.example` - Hook configuration template
 
@@ -78,5 +79,5 @@ Safety guardrails, standard enforcement, and context injection for Claude Code.
 - All functions need docstrings
 
 ## Compatibility
-- Python 3.8+ stdlib only (no external dependencies)
+- Python 3.12+ stdlib only (no external dependencies)
 - Cross-platform: macOS, Linux, Windows (Git Bash)

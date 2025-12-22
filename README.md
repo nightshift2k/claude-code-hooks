@@ -5,7 +5,7 @@
 **Protect your codebase and enhance Claude Code with safety guardrails, standard enforcement, and context injection.**
 
 [![License](https://img.shields.io/github/license/nightshift2k/claude-code-hooks)](https://github.com/nightshift2k/claude-code-hooks/blob/main/LICENSE)
-[![Python](https://img.shields.io/badge/python-3.8+-blue)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.12+-blue)](https://www.python.org/)
 [![Release](https://img.shields.io/github/v/release/nightshift2k/claude-code-hooks)](https://github.com/nightshift2k/claude-code-hooks/releases)
 [![Stars](https://img.shields.io/github/stars/nightshift2k/claude-code-hooks)](https://github.com/nightshift2k/claude-code-hooks/stargazers)
 [![Issues](https://img.shields.io/github/issues/nightshift2k/claude-code-hooks)](https://github.com/nightshift2k/claude-code-hooks/issues)
@@ -75,6 +75,7 @@ Merge the hook configurations from `settings.json.example` into your `~/.claude/
 |------|-------|-------------|
 | `environment-awareness.py` | SessionStart | Injects date, time, timezone, OS, and working directory |
 | `large-file-awareness.py` | SessionStart | Scans project at session start, injects awareness of large files (>500 lines) to enable efficient navigation strategies (Serena, Grep, Read offset/limit) |
+| `serena-awareness.py` | UserPromptSubmit | Detects Serena-configured projects on first prompt, suggests activate_project or onboarding |
 | `rules-reminder.py` | SessionStart, UserPromptSubmit | Reminds Claude about CLAUDE.md and .claude/rules/* |
 | `release-reminder.py` | UserPromptSubmit | Reminds about release verification checklist when release keywords detected |
 | `prompt-flag-appender.py` | UserPromptSubmit | Injects markdown via `+ultrathink`, `+absolute`, `+approval`, `+seqthi` triggers |

@@ -5,15 +5,14 @@ Comprehensive tests for release-reminder hook.
 Tests main() function and keyword detection for release-related prompts.
 """
 
+# Import using importlib for hyphenated name
+import importlib.util
 import json
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-# Import using importlib for hyphenated name
-import importlib.util
 
 hooks_dir = Path(__file__).parent.parent / "hooks"
 spec = importlib.util.spec_from_file_location(
@@ -38,12 +37,12 @@ class TestMain:
         """Should output reminder when 'release' keyword found."""
         input_data = {
             "hook_event_name": "UserPromptSubmit",
-            "prompt": "prepare a new release for version 0.1.4"
+            "prompt": "prepare a new release for version 0.1.4",
         }
 
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -58,12 +57,12 @@ class TestMain:
         """Should output reminder when 'tag v' keyword found."""
         input_data = {
             "hook_event_name": "UserPromptSubmit",
-            "prompt": "tag v0.2.0 for the next release"
+            "prompt": "tag v0.2.0 for the next release",
         }
 
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -75,12 +74,12 @@ class TestMain:
         """Should output reminder when 'version bump' keyword found."""
         input_data = {
             "hook_event_name": "UserPromptSubmit",
-            "prompt": "version bump to 1.2.3"
+            "prompt": "version bump to 1.2.3",
         }
 
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -92,12 +91,12 @@ class TestMain:
         """Should output reminder when 'prepare release' keyword found."""
         input_data = {
             "hook_event_name": "UserPromptSubmit",
-            "prompt": "prepare release for the new feature"
+            "prompt": "prepare release for the new feature",
         }
 
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -109,12 +108,12 @@ class TestMain:
         """Should output reminder when version pattern like 'v0.1.' found."""
         input_data = {
             "hook_event_name": "UserPromptSubmit",
-            "prompt": "update to v0.1.5"
+            "prompt": "update to v0.1.5",
         }
 
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -124,14 +123,11 @@ class TestMain:
 
     def test_outputs_reminder_on_version_pattern_v1_0_dot(self, capsys) -> None:
         """Should output reminder when version pattern like 'v1.0.' found."""
-        input_data = {
-            "hook_event_name": "UserPromptSubmit",
-            "prompt": "tag v1.0.0"
-        }
+        input_data = {"hook_event_name": "UserPromptSubmit", "prompt": "tag v1.0.0"}
 
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -143,12 +139,12 @@ class TestMain:
         """Should not output reminder when no release keywords found."""
         input_data = {
             "hook_event_name": "UserPromptSubmit",
-            "prompt": "implement a new feature for user authentication"
+            "prompt": "implement a new feature for user authentication",
         }
 
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -160,12 +156,12 @@ class TestMain:
         """Should not output reminder for question prompts."""
         input_data = {
             "hook_event_name": "UserPromptSubmit",
-            "prompt": "what is the latest version?"
+            "prompt": "what is the latest version?",
         }
 
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -177,12 +173,12 @@ class TestMain:
         """Should match keywords case-insensitively."""
         input_data = {
             "hook_event_name": "UserPromptSubmit",
-            "prompt": "RELEASE the new version"
+            "prompt": "RELEASE the new version",
         }
 
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -194,9 +190,9 @@ class TestMain:
         """Should exit silently for unknown event types."""
         input_data = {"hook_event_name": "UnknownEvent"}
 
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -206,9 +202,9 @@ class TestMain:
 
     def test_exits_successfully_on_exception(self) -> None:
         """Should exit 0 on unexpected exceptions (silent failure)."""
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', side_effect=Exception("Unexpected error")):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", side_effect=Exception("Unexpected error")):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -216,9 +212,11 @@ class TestMain:
 
     def test_handles_malformed_json(self) -> None:
         """Should exit 0 when stdin contains malformed JSON."""
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', side_effect=json.JSONDecodeError("msg", "doc", 0)):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch(
+                    "json.load", side_effect=json.JSONDecodeError("msg", "doc", 0)
+                ):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -228,9 +226,9 @@ class TestMain:
         """Should not output anything on SessionStart event."""
         input_data = {"hook_event_name": "SessionStart"}
 
-        with patch('release_reminder.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("release_reminder.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 

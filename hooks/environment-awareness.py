@@ -15,7 +15,7 @@ import platform
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from hook_utils import exit_if_disabled
 
@@ -61,7 +61,7 @@ def main() -> None:
     exit_if_disabled()
 
     try:
-        input_data: Dict[str, Any] = json.load(sys.stdin)
+        input_data: dict[str, Any] = json.load(sys.stdin)
 
         # Only process SessionStart events
         if input_data.get("hook_event_name") != "SessionStart":

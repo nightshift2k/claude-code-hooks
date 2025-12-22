@@ -10,7 +10,7 @@ the default Claude-generated attribution.
 import json
 import re
 import sys
-from typing import Any, Dict
+from typing import Any
 
 from hook_utils import Colors, exit_if_disabled
 
@@ -55,7 +55,7 @@ def main() -> None:
 
     # Read hook data from stdin
     tool_use_json = sys.stdin.read()
-    tool_use: Dict[str, Any] = json.loads(tool_use_json)
+    tool_use: dict[str, Any] = json.loads(tool_use_json)
 
     # Only process Bash commands
     if tool_use.get("tool_name") != "Bash":

@@ -7,17 +7,14 @@ Tests all functions:
 - main()
 """
 
-import json
-import os
-import sys
-from datetime import datetime
-from pathlib import Path
-from unittest.mock import patch, MagicMock
-
-import pytest
-
 # Import using importlib for hyphenated name
 import importlib.util
+import json
+import sys
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 hooks_dir = Path(__file__).parent.parent / "hooks"
 spec = importlib.util.spec_from_file_location(
@@ -47,11 +44,13 @@ class TestGetEnvironmentContext:
             "%H:%M %Z": "14:30 PST",
         }[fmt]
 
-        with patch('environment_awareness.datetime') as mock_dt:
+        with patch("environment_awareness.datetime") as mock_dt:
             mock_dt.now.return_value.astimezone.return_value = mock_now
-            with patch('environment_awareness.platform.system', return_value='Darwin'):
-                with patch('environment_awareness.platform.release', return_value='24.0.0'):
-                    monkeypatch.setenv('CLAUDE_PROJECT_DIR', '/home/user/project')
+            with patch("environment_awareness.platform.system", return_value="Darwin"):
+                with patch(
+                    "environment_awareness.platform.release", return_value="24.0.0"
+                ):
+                    monkeypatch.setenv("CLAUDE_PROJECT_DIR", "/home/user/project")
 
                     result = get_environment_context()
 
@@ -66,11 +65,13 @@ class TestGetEnvironmentContext:
             "%H:%M %Z": "14:30 PST",
         }[fmt]
 
-        with patch('environment_awareness.datetime') as mock_dt:
+        with patch("environment_awareness.datetime") as mock_dt:
             mock_dt.now.return_value.astimezone.return_value = mock_now
-            with patch('environment_awareness.platform.system', return_value='Darwin'):
-                with patch('environment_awareness.platform.release', return_value='24.0.0'):
-                    monkeypatch.setenv('CLAUDE_PROJECT_DIR', '/home/user/project')
+            with patch("environment_awareness.platform.system", return_value="Darwin"):
+                with patch(
+                    "environment_awareness.platform.release", return_value="24.0.0"
+                ):
+                    monkeypatch.setenv("CLAUDE_PROJECT_DIR", "/home/user/project")
 
                     result = get_environment_context()
 
@@ -84,11 +85,13 @@ class TestGetEnvironmentContext:
             "%H:%M %Z": "14:30 PST",
         }[fmt]
 
-        with patch('environment_awareness.datetime') as mock_dt:
+        with patch("environment_awareness.datetime") as mock_dt:
             mock_dt.now.return_value.astimezone.return_value = mock_now
-            with patch('environment_awareness.platform.system', return_value='Linux'):
-                with patch('environment_awareness.platform.release', return_value='6.2.0'):
-                    monkeypatch.setenv('CLAUDE_PROJECT_DIR', '/home/user/project')
+            with patch("environment_awareness.platform.system", return_value="Linux"):
+                with patch(
+                    "environment_awareness.platform.release", return_value="6.2.0"
+                ):
+                    monkeypatch.setenv("CLAUDE_PROJECT_DIR", "/home/user/project")
 
                     result = get_environment_context()
 
@@ -105,11 +108,13 @@ class TestGetEnvironmentContext:
         home = str(Path.home())
         project_dir = f"{home}/projects/myapp"
 
-        with patch('environment_awareness.datetime') as mock_dt:
+        with patch("environment_awareness.datetime") as mock_dt:
             mock_dt.now.return_value.astimezone.return_value = mock_now
-            with patch('environment_awareness.platform.system', return_value='Linux'):
-                with patch('environment_awareness.platform.release', return_value='6.2.0'):
-                    monkeypatch.setenv('CLAUDE_PROJECT_DIR', project_dir)
+            with patch("environment_awareness.platform.system", return_value="Linux"):
+                with patch(
+                    "environment_awareness.platform.release", return_value="6.2.0"
+                ):
+                    monkeypatch.setenv("CLAUDE_PROJECT_DIR", project_dir)
 
                     result = get_environment_context()
 
@@ -123,11 +128,13 @@ class TestGetEnvironmentContext:
             "%H:%M %Z": "14:30 PST",
         }[fmt]
 
-        with patch('environment_awareness.datetime') as mock_dt:
+        with patch("environment_awareness.datetime") as mock_dt:
             mock_dt.now.return_value.astimezone.return_value = mock_now
-            with patch('environment_awareness.platform.system', return_value='Linux'):
-                with patch('environment_awareness.platform.release', return_value='6.2.0'):
-                    monkeypatch.setenv('CLAUDE_PROJECT_DIR', '/opt/project')
+            with patch("environment_awareness.platform.system", return_value="Linux"):
+                with patch(
+                    "environment_awareness.platform.release", return_value="6.2.0"
+                ):
+                    monkeypatch.setenv("CLAUDE_PROJECT_DIR", "/opt/project")
 
                     result = get_environment_context()
 
@@ -141,13 +148,17 @@ class TestGetEnvironmentContext:
             "%H:%M %Z": "14:30 PST",
         }[fmt]
 
-        monkeypatch.delenv('CLAUDE_PROJECT_DIR', raising=False)
+        monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)
 
-        with patch('environment_awareness.datetime') as mock_dt:
+        with patch("environment_awareness.datetime") as mock_dt:
             mock_dt.now.return_value.astimezone.return_value = mock_now
-            with patch('environment_awareness.platform.system', return_value='Linux'):
-                with patch('environment_awareness.platform.release', return_value='6.2.0'):
-                    with patch('environment_awareness.os.getcwd', return_value='/tmp/test'):
+            with patch("environment_awareness.platform.system", return_value="Linux"):
+                with patch(
+                    "environment_awareness.platform.release", return_value="6.2.0"
+                ):
+                    with patch(
+                        "environment_awareness.os.getcwd", return_value="/tmp/test"
+                    ):
                         result = get_environment_context()
 
         assert "Directory: /tmp/test" in result
@@ -160,11 +171,13 @@ class TestGetEnvironmentContext:
             "%H:%M %Z": "14:30 PST",
         }[fmt]
 
-        with patch('environment_awareness.datetime') as mock_dt:
+        with patch("environment_awareness.datetime") as mock_dt:
             mock_dt.now.return_value.astimezone.return_value = mock_now
-            with patch('environment_awareness.platform.system', return_value='Linux'):
-                with patch('environment_awareness.platform.release', return_value='6.2.0'):
-                    monkeypatch.setenv('CLAUDE_PROJECT_DIR', '/tmp/test')
+            with patch("environment_awareness.platform.system", return_value="Linux"):
+                with patch(
+                    "environment_awareness.platform.release", return_value="6.2.0"
+                ):
+                    monkeypatch.setenv("CLAUDE_PROJECT_DIR", "/tmp/test")
 
                     result = get_environment_context()
 
@@ -187,9 +200,9 @@ class TestMain:
         """Should exit 0 without output for non-SessionStart events."""
         input_data = {"hook_event_name": "UserPromptSubmit", "prompt": "test"}
 
-        with patch('environment_awareness.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
+        with patch("environment_awareness.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -201,10 +214,13 @@ class TestMain:
         """Should output environment context for SessionStart events."""
         input_data = {"hook_event_name": "SessionStart"}
 
-        with patch('environment_awareness.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', return_value=input_data):
-                    with patch('environment_awareness.get_environment_context', return_value="## Test Output"):
+        with patch("environment_awareness.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", return_value=input_data):
+                    with patch(
+                        "environment_awareness.get_environment_context",
+                        return_value="## Test Output",
+                    ):
                         with pytest.raises(SystemExit) as exc_info:
                             main()
 
@@ -214,9 +230,9 @@ class TestMain:
 
     def test_exits_successfully_on_exception(self) -> None:
         """Should exit 0 on unexpected exceptions (silent failure)."""
-        with patch('environment_awareness.exit_if_disabled'):
-            with patch('sys.stdin', MagicMock()):
-                with patch('json.load', side_effect=Exception("Unexpected error")):
+        with patch("environment_awareness.exit_if_disabled"):
+            with patch("sys.stdin", MagicMock()):
+                with patch("json.load", side_effect=Exception("Unexpected error")):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
@@ -224,9 +240,11 @@ class TestMain:
 
     def test_handles_malformed_json(self) -> None:
         """Should exit 0 when stdin contains malformed JSON."""
-        with patch('environment_awareness.exit_if_disabled'):
-            with patch('sys.stdin.read', return_value="not valid json"):
-                with patch('json.load', side_effect=json.JSONDecodeError("msg", "doc", 0)):
+        with patch("environment_awareness.exit_if_disabled"):
+            with patch("sys.stdin.read", return_value="not valid json"):
+                with patch(
+                    "json.load", side_effect=json.JSONDecodeError("msg", "doc", 0)
+                ):
                     with pytest.raises(SystemExit) as exc_info:
                         main()
 
