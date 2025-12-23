@@ -99,8 +99,10 @@ graph TB
     end
     subgraph "Hooks"
         SS --> ENV[environment-awareness]
+        SS --> LFA[large-file-awareness]
         SS --> RULES1[rules-reminder]
         UPS --> PFA[prompt-flag-appender]
+        UPS --> SA[serena-awareness]
         UPS --> RULES2[rules-reminder]
         UPS --> RR[release-reminder]
         PTU --> GSC[git-safety-check]
@@ -605,6 +607,137 @@ touch .claude/hook-verbose-mode-on
 
 </details>
 
+<details>
+<summary><b>serena-awareness.py</b></summary>
+
+### serena-awareness.py
+
+Detects Serena-configured projects on first prompt in a session and suggests MCP integration.
+
+#### Detection States
+
+| State | Indicators | Output |
+|-------|------------|--------|
+| Configured | `.git/` + `.serena/project.yml` with `project_name` | Suggests `activate_project` |
+| Code Project | `.git/` + code files (no Serena) | Suggests `onboarding` |
+| Not a Project | No `.git/` | Silent |
+
+#### Example Output
+
+**Configured project:**
+```
+## Serena Project Detected
+.serena/ with project "my-project" found.
+Configured languages: python, typescript
+If Serena MCP is available: `activate_project`
+```
+
+**Code project (unconfigured):**
+```
+## Code Project Detected
+Detected languages: Python, TypeScript, JavaScript
+If Serena MCP is available, consider `onboarding` for semantic code navigation.
+```
+
+#### Aggressive Mode
+
+For stricter Serena enforcement, enable aggressive mode:
+
+```bash
+# Per-session (environment variable)
+SERENA_AGGRESSIVE_MODE=1 claude
+
+# Per-project (flag file)
+touch .claude/hook-serena-awareness-aggressive-on
+```
+
+Aggressive mode uses prescriptive language that REQUIRES Serena MCP for code exploration:
+
+```
+## Serena Project Active
+Project: my-project (python)
+
+<MANDATORY>
+**Serena MCP is REQUIRED for all code exploration in this project.**
+
+DO:
+- `find_symbol` for locating classes, functions, methods
+- `get_symbols_overview` for file structure
+- `find_referencing_symbols` for usage/callers
+
+DO NOT:
+- Grep for function/class definitions
+- Glob for finding code files by pattern
+- Read entire files to find symbols
+</MANDATORY>
+```
+
+#### Session Tracking
+
+Uses marker files in `.claude/hook_serena_awareness_session_markers/` to track seen sessions:
+- Only outputs on first prompt per session
+- Self-cleaning: removes markers older than 7 days
+- Project-local storage (not global)
+
+#### Language Detection
+
+Detects 30+ programming languages by scanning project root and `src/` directories. Uses `FilenameMatcher` patterns from `hook_utils.py`.
+
+</details>
+
+<details>
+<summary><b>large-file-awareness.py</b></summary>
+
+### large-file-awareness.py
+
+Scans project at session start and injects awareness of large files (>500 lines) to enable efficient navigation from the beginning.
+
+#### Example Output
+
+```
+## Large Files (symbolic navigation required)
+tests/test_doc_update_check.py (1081 lines, ~12702 tokens) → Serena
+tests/test_serena_awareness.py (872 lines, ~9199 tokens) → Serena
+README.md (804 lines, ~6447 tokens) → Read offset/limit
+tests/test_large_file_awareness.py (725 lines, ~7002 tokens) → Serena
+(+5 more files over 500 lines)
+
+Action: find_symbol for code, Read offset/limit for sections.
+```
+
+#### Tool Recommendations
+
+| File Type | Recommended Tool | Examples |
+|-----------|------------------|----------|
+| Code | Serena `find_symbol` | `.py`, `.ts`, `.go`, `.rs` |
+| Data | Grep patterns | `.json`, `.yaml`, `.csv` |
+| Text | Read offset/limit | `.md`, `.txt` |
+| Binary | (skipped) | `.png`, `.pdf`, `.zip` |
+
+#### File Discovery
+
+1. **Git projects**: Uses `git ls-files` (respects `.gitignore`)
+2. **Non-git**: Falls back to `os.walk` with standard excludes
+
+**Standard excludes:** `.git`, `node_modules`, `__pycache__`, `.venv`, `vendor`, `dist`, `build`, `.next`, `target`
+
+#### Configuration
+
+```bash
+# Set custom threshold (default: 500 lines)
+export LARGE_FILE_THRESHOLD=1000
+
+# Or via settings.json: {"hooks": {"largeFileThreshold": 1000}}
+```
+
+#### Defense-in-Depth
+
+Works alongside `large-file-guard.py`:
+- **Awareness** (this hook): Proactive warning at session start
+- **Guard**: Blocks actual Read operations on large files
+
+</details>
+
 ---
 
 ## Configuration
@@ -622,6 +755,7 @@ touch .claude/hook-verbose-mode-on
         "matcher": "startup|resume",
         "hooks": [
           {"type": "command", "command": "~/.claude/hooks/environment-awareness.py"},
+          {"type": "command", "command": "~/.claude/hooks/large-file-awareness.py"},
           {"type": "command", "command": "~/.claude/hooks/rules-reminder.py"}
         ]
       }
@@ -630,6 +764,7 @@ touch .claude/hook-verbose-mode-on
       {
         "hooks": [
           {"type": "command", "command": "~/.claude/hooks/prompt-flag-appender.py"},
+          {"type": "command", "command": "~/.claude/hooks/serena-awareness.py"},
           {"type": "command", "command": "~/.claude/hooks/rules-reminder.py"},
           {"type": "command", "command": "~/.claude/hooks/release-reminder.py"}
         ]
@@ -652,6 +787,12 @@ touch .claude/hook-verbose-mode-on
         "matcher": "^(Edit|Write)$|mcp__morphllm.*|mcp__serena.*(replace|insert).*",
         "hooks": [
           {"type": "command", "command": "~/.claude/hooks/git-branch-protection.py"}
+        ]
+      },
+      {
+        "matcher": "^(Read)$",
+        "hooks": [
+          {"type": "command", "command": "~/.claude/hooks/large-file-guard.py"}
         ]
       }
     ]
@@ -683,6 +824,9 @@ touch .claude/hook-verbose-mode-on
 | `SKIP_CHANGELOG_CHECK` | "1" to bypass changelog-reminder hook |
 | `SKIP_RELEASE_CHECK` | "1" to bypass release-check hook |
 | `DOC_CHECK_USE_AI` | "1" to enable AI-powered merge detection |
+| `LARGE_FILE_THRESHOLD` | Override large file threshold (default: 500 lines) |
+| `ALLOW_LARGE_READ` | "1" to bypass large-file-guard for single read |
+| `SERENA_AGGRESSIVE_MODE` | "1" to enable prescriptive Serena enforcement |
 
 </details>
 
