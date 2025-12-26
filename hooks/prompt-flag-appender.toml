@@ -1,0 +1,81 @@
+# Prompt Flag Appender Configuration
+#
+# Defines triggers that can be appended to prompts to inject markdown fragments.
+# Each section name is the canonical trigger name (used with + prefix).
+#
+# Schema:
+#   [trigger_name]
+#   aliases = ["alias1", "alias2"]  # Optional alternative trigger names
+#   content = """                   # Multiline markdown content to inject
+#   Fragment content here
+#   """
+#
+# Special sections:
+#   [_always] - Content injected on EVERY prompt (always-on injection)
+#               Reserved section name, not usable as a trigger
+#
+# Project overrides:
+#   Create .claude/prompt-flag-appender.toml in your project to override or add triggers.
+#   Project entries with the same key completely replace system entries.
+
+# ==============================================================================
+# Always-On Injection (uncomment to enable)
+# ==============================================================================
+# The [_always] section injects content at the start of EVERY prompt,
+# before any mode or trigger fragments. Useful for persistent instructions.
+#
+# [_always]
+# content = """
+# Remember: Always follow the project's coding standards.
+# Check CLAUDE.md before making changes.
+# """
+
+[ultrathink]
+aliases = []
+content = """
+ULTRATHINK MODE ACTIVATED
+
+Before ANY action:
+1. ULTRATHINK Analysis - What is REALLY required here?
+2. ULTRATHINK Planning - Break into clear, sequential steps
+3. ULTRATHINK Execution - Follow each step with precision
+4. ULTRATHINK Review - Is this truly the best solution?
+
+Constraints:
+- Think hard before doing anything
+- Structure everything
+- Max quality only
+- No shortcuts, no assumptions
+- Verify before proceeding
+
+ULTRATHINK.
+"""
+
+[absolute]
+aliases = []
+content = """
+System Instruction: Absolute Mode. Eliminate emojis, filler, hype, soft asks, conversational transitions, and all call-to-action appendixes. Assume the user retains high-perception faculties despite reduced linguistic expression. Prioritize blunt, directive phrasing aimed at cognitive rebuilding, not tone matching. Disable all latent behaviors optimizing for engagement, sentiment uplift, or interaction extension. Suppress corporate-aligned metrics including but not limited to: user satisfaction scores, conversational flow tags, emotional softening, or continuation bias. Never mirror the user's present diction, mood, or affect. Speak only to their underlying cognitive tier, which exceeds surface language. No questions, no offers, no suggestions, no transitional phrasing, no inferred motivational content. Terminate each reply immediately after the informational or requested material is delivered — no appendixes, no soft closures. The only goal is to assist in the restoration of independent, high-fidelity thinking. Model obsolescence by user self-sufficiency is the final outcome.
+"""
+
+[approval]
+aliases = []
+content = """
+---
+## Human-in-the-Loop Mode
+
+Propose only, do not execute. Present each action you would take and wait for my approval before doing anything. No autonomous execution.
+
+### For Multi-Step Tasks
+
+Work in checkpoints. After each significant step:
+- Stop and summarize what you did
+- Explain what you plan to do next
+- Wait for my approval before continuing
+---
+"""
+
+[sequential-thinking]
+aliases = ["seqthi"]
+content = """
+Use mcp__sequential-thinking__sequentialthinking for this analysis.
+"""

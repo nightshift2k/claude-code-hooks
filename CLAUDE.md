@@ -3,6 +3,8 @@
 ## Project
 Safety guardrails, standard enforcement, and context injection for Claude Code.
 
+**GitHub**: `nightshift2k/claude-code-hooks`
+
 ## Hooks
 - `environment-awareness` - Injects date, time, timezone, OS, directory at session start
 - `large-file-awareness` - Scans project at session start, warns about large files for efficient navigation
@@ -19,7 +21,7 @@ Safety guardrails, standard enforcement, and context injection for Claude Code.
 ## Structure
 - `hooks/*.py` - Hook scripts (stdlib only, Python 3.12+)
 - `hooks/hook_utils.py` - Shared utilities (Colors, exit_if_disabled, Language detection)
-- `hooks/prompt-fragments/*.md` - Prompt injection templates
+- `hooks/prompt-flag-appender.toml` - Trigger definitions for prompt injection
 - `settings.json.example` - Hook configuration template
 
 ## Development Setup

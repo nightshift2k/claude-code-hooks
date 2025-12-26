@@ -26,4 +26,5 @@ uv.lock
 # Claude Code hook configuration (local preferences)
 .claude/disabled-hooks
 .claude/hook-*-mode-on
+.claude/prompt-flag-appender.toml
 .tmp/

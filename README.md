@@ -78,7 +78,7 @@ Merge the hook configurations from `settings.json.example` into your `~/.claude/
 | `serena-awareness.py` | UserPromptSubmit | Detects Serena-configured projects on first prompt, suggests activate_project or onboarding |
 | `rules-reminder.py` | SessionStart, UserPromptSubmit | Reminds Claude about CLAUDE.md and .claude/rules/* |
 | `release-reminder.py` | UserPromptSubmit | Reminds about release verification checklist when release keywords detected |
-| `prompt-flag-appender.py` | UserPromptSubmit | Injects markdown via `+ultrathink`, `+absolute`, `+approval`, `+seqthi` triggers |
+| `prompt-flag-appender.py` | UserPromptSubmit | Injects markdown via TOML-defined triggers with alias support and project overrides |
 
 ### 🔧 Shared Utilities
 
@@ -524,24 +524,76 @@ Review and follow all project rules strictly before making changes.
 
 ### prompt-flag-appender.py
 
-Appends markdown fragments based on trigger words or session modes.
+Appends markdown fragments based on trigger words or session modes. Configuration is stored in a single TOML file with support for aliases and project-level overrides.
 
-#### Per-Prompt Triggers
+#### Built-in Triggers
 
-| Trigger | File | Effect |
-|---------|------|--------|
-| `+ultrathink` | ultrathink.md | Deep analysis mode |
-| `+absolute` | absolute.md | Direct, no-filler responses |
-| `+approval` | approval.md | Human-in-the-loop mode (propose, don't execute) |
-| `+seqthi` | sequential-thinking.md | Invoke sequential thinking MCP |
+| Trigger | Aliases | Effect |
+|---------|---------|--------|
+| `+ultrathink` | - | Deep analysis mode |
+| `+absolute` | - | Direct, no-filler responses |
+| `+approval` | - | Human-in-the-loop mode (propose, don't execute) |
+| `+sequential-thinking` | `+seqthi` | Invoke sequential thinking MCP |
 
 **Usage:**
 ```
 refactor this code +ultrathink
 help me understand this +absolute
 implement feature +approval
-complex task +ultrathink +absolute
+complex task +seqthi
 ```
+
+#### TOML Configuration
+
+Triggers are defined in `prompt-flag-appender.toml`:
+
+```toml
+# ~/.claude/hooks/prompt-flag-appender.toml (system)
+# $CLAUDE_PROJECT_DIR/.claude/prompt-flag-appender.toml (project override)
+
+[ultrathink]
+aliases = []
+content = """
+ULTRATHINK MODE ACTIVATED
+...
+"""
+
+[sequential-thinking]
+aliases = ["seqthi", "seq"]
+content = """
+Use mcp__sequential-thinking__sequentialthinking for this analysis.
+"""
+
+[custom-trigger]
+aliases = ["ct", "custom"]
+content = """
+Your custom prompt injection here...
+"""
+```
+
+#### Project Overrides
+
+Create a project-specific TOML file to add or override triggers:
+
+```bash
+# Create project-level config
+cat > .claude/prompt-flag-appender.toml << 'EOF'
+[project-mode]
+aliases = ["pm"]
+content = """
+Follow project-specific guidelines...
+"""
+
+# Override system trigger
+[ultrathink]
+aliases = ["think", "deep"]
+content = """
+Custom ultrathink for this project...
+"""
+EOF
+```
+
+**Merge behavior:** Project config merges with system config. Project entries override system entries with the same name.
 
 #### Session-Based Modes
 
@@ -558,52 +610,47 @@ touch .claude/hook-approval-mode-on
 rm .claude/hook-approval-mode-on
 ```
 
+**Mode resolution:** Mode names resolve through the TOML trigger system, including aliases. `hook-seq-mode-on` resolves via alias to `sequential-thinking`.
+
 **Mode precedence:** Session modes are injected first, then per-prompt triggers are appended.
 
-**Example:**
-```bash
-# Enable approval mode for session
-touch .claude/hook-approval-mode-on
+#### Always-On Injection
 
-# This prompt gets both approval mode (from flag file) and ultrathink (from trigger)
-"refactor this code +ultrathink"
+Use the special `[_always]` section to inject content on **every prompt**, before any mode or trigger fragments:
+
+```toml
+# In ~/.claude/hooks/prompt-flag-appender.toml or .claude/prompt-flag-appender.toml
+
+[_always]
+content = """
+Remember: Follow the project's coding standards.
+Check CLAUDE.md before making changes.
+"""
 ```
+
+**Injection order:** `[_always]` → Session modes → Per-prompt triggers
+
+**Use cases:**
+- Persistent project-specific instructions
+- Default behavior modifiers
+- Always-on safety reminders
 
 #### Adding Custom Triggers
 
-1. Create markdown file in `~/.claude/hooks/prompt-fragments/`
-2. Add mapping to `TRIGGER_FILE_MAP` in `prompt-flag-appender.py`:
+Add triggers to your system or project TOML file:
 
-```python
-TRIGGER_FILE_MAP = {
-    "+ultrathink": "ultrathink.md",
-    "+absolute": "absolute.md",
-    "+approval": "approval.md",
-    "+concise": "concise.md",  # your custom trigger
-}
-```
+```toml
+# In ~/.claude/hooks/prompt-flag-appender.toml or .claude/prompt-flag-appender.toml
 
-#### Adding Custom Session Modes
-
-1. Create markdown file in `~/.claude/hooks/prompt-fragments/<mode>.md`
-2. Add trigger mapping to `TRIGGER_FILE_MAP` (optional, if you want both trigger and mode support)
-3. Create flag file in project: `touch .claude/hook-<mode>-mode-on`
-
-**Example: Adding "verbose" mode**
-```bash
-# 1. Create fragment
-cat > ~/.claude/hooks/prompt-fragments/verbose.md << 'EOF'
----
+[verbose]
+aliases = ["v", "detailed"]
+content = """
 ## Verbose Mode
 Provide detailed explanations with step-by-step reasoning.
----
-EOF
-
-# 2. (Optional) Add to TRIGGER_FILE_MAP for +verbose trigger support
-
-# 3. Enable as session mode (in project root)
-touch .claude/hook-verbose-mode-on
+"""
 ```
+
+Now `+verbose`, `+v`, and `+detailed` all inject the same content.
 
 </details>
 

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **prompt-flag-appender.py** - Always-on injection via special `[_always]` section in TOML config. Content is injected at the start of every prompt, before mode and trigger fragments. Useful for persistent project-specific instructions.
+
+### Changed
+
+- **prompt-flag-appender.py** - Refactored to use single TOML configuration file instead of multiple markdown fragments. Triggers and their content are now defined in `prompt-flag-appender.toml` with support for aliases (e.g., `+seq` → `sequential-thinking`). Supports project-level overrides via `$CLAUDE_PROJECT_DIR/.claude/prompt-flag-appender.toml` that merge with system config (project wins on conflicts). Mode flag files (`.claude/hook-*-mode-on`) now resolve through the TOML trigger system, gaining alias support.
+
+### Removed
+
+- **hooks/prompt-fragments/** - Deleted directory containing individual markdown fragment files (ultrathink.md, absolute.md, approval.md, sequential-thinking.md). Content migrated to consolidated `prompt-flag-appender.toml`.
+
 ## [0.1.8] - 2025-12-22
 
 ### Added
