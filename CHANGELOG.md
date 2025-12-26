@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.9] - 2025-12-26
 
 ### Added
 
@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - **hooks/prompt-fragments/** - Deleted directory containing individual markdown fragment files (ultrathink.md, absolute.md, approval.md, sequential-thinking.md). Content migrated to consolidated `prompt-flag-appender.toml`.
+
+### Fixed
+
+- **Documentation sync** - Corrected `serena_awareness.py` filename references (was incorrectly using hyphen instead of underscore in settings.json.example and README). Added missing hooks to CLAUDE.md (changelog-reminder, release-check, release-reminder). Updated README example to use Python 3.12+ type hints (`dict[str, Any]` instead of `Dict[str, Any]`).
 
 ## [0.1.8] - 2025-12-22
 

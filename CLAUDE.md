@@ -8,14 +8,17 @@ Safety guardrails, standard enforcement, and context injection for Claude Code.
 ## Hooks
 - `environment-awareness` - Injects date, time, timezone, OS, directory at session start
 - `large-file-awareness` - Scans project at session start, warns about large files for efficient navigation
-- `serena-awareness` - Detects Serena projects on first prompt, suggests activate_project or onboarding
+- `serena_awareness` - Detects Serena projects on first prompt, suggests activate_project or onboarding
 - `git-branch-protection` - Blocks edits to protected branches (main, master, production, prod)
 - `git-safety-check` - Blocks --no-verify flag and protected branch deletion
 - `git-commit-message-filter` - Blocks commits with Claude auto-generated attribution
 - `doc-update-check` - Blocks merge-to-main without documentation updates
+- `changelog-reminder` - Blocks commits without CHANGELOG.md update for meaningful changes
+- `release-check` - Blocks git tag without version in CHANGELOG.md
+- `release-reminder` - Shows release checklist when release keywords detected
 - `python-uv-enforcer` - Blocks pip/python, enforces uv
 - `rules-reminder` - Reminds Claude about CLAUDE.md and .claude/rules/* at session start and implementation
-- `prompt-flag-appender` - Injects markdown fragments via +triggers (+ultrathink, +absolute)
+- `prompt-flag-appender` - Injects TOML-defined fragments via +triggers (+ultrathink, +seqthi)
 - `large-file-guard` - Blocks Read for large files (>500 lines), suggests Serena/Grep alternatives
 
 ## Structure

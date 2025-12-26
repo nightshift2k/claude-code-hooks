@@ -1,6 +1,6 @@
 [project]
 name = "claude-code-hooks"
-version = "0.1.7"
+version = "0.1.9"
 description = "Safety guardrails and context injection for Claude Code"
 readme = "README.md"
 license = {text = "MIT"}

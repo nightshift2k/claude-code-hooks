@@ -75,7 +75,7 @@ Merge the hook configurations from `settings.json.example` into your `~/.claude/
 |------|-------|-------------|
 | `environment-awareness.py` | SessionStart | Injects date, time, timezone, OS, and working directory |
 | `large-file-awareness.py` | SessionStart | Scans project at session start, injects awareness of large files (>500 lines) to enable efficient navigation strategies (Serena, Grep, Read offset/limit) |
-| `serena-awareness.py` | UserPromptSubmit | Detects Serena-configured projects on first prompt, suggests activate_project or onboarding |
+| `serena_awareness.py` | UserPromptSubmit | Detects Serena-configured projects on first prompt, suggests activate_project or onboarding |
 | `rules-reminder.py` | SessionStart, UserPromptSubmit | Reminds Claude about CLAUDE.md and .claude/rules/* |
 | `release-reminder.py` | UserPromptSubmit | Reminds about release verification checklist when release keywords detected |
 | `prompt-flag-appender.py` | UserPromptSubmit | Injects markdown via TOML-defined triggers with alias support and project overrides |
@@ -655,9 +655,9 @@ Now `+verbose`, `+v`, and `+detailed` all inject the same content.
 </details>
 
 <details>
-<summary><b>serena-awareness.py</b></summary>
+<summary><b>serena_awareness.py</b></summary>
 
-### serena-awareness.py
+### serena_awareness.py
 
 Detects Serena-configured projects on first prompt in a session and suggests MCP integration.
 
@@ -811,7 +811,7 @@ Works alongside `large-file-guard.py`:
       {
         "hooks": [
           {"type": "command", "command": "~/.claude/hooks/prompt-flag-appender.py"},
-          {"type": "command", "command": "~/.claude/hooks/serena-awareness.py"},
+          {"type": "command", "command": "~/.claude/hooks/serena_awareness.py"},
           {"type": "command", "command": "~/.claude/hooks/rules-reminder.py"},
           {"type": "command", "command": "~/.claude/hooks/release-reminder.py"}
         ]
@@ -894,7 +894,7 @@ Works alongside `large-file-guard.py`:
 
 import json
 import sys
-from typing import Dict, Any
+from typing import Any
 
 from hook_utils import exit_if_disabled, Colors
 
@@ -903,7 +903,7 @@ def main() -> None:
     exit_if_disabled()
 
     try:
-        input_data: Dict[str, Any] = json.load(sys.stdin)
+        input_data: dict[str, Any] = json.load(sys.stdin)
         # Your logic here
         sys.exit(0)
     except Exception:

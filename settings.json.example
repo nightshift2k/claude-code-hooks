@@ -33,7 +33,7 @@
             // serena-awareness: Detects Serena-configured projects and code projects
             // Suggests activate_project for configured projects, onboarding for code projects
             // Only outputs on first prompt in session (uses session markers)
-            "command": "~/.claude/hooks/serena-awareness.py"
+            "command": "~/.claude/hooks/serena_awareness.py"
           },
           {
             "type": "command",
